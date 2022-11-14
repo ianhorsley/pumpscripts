@@ -9,8 +9,8 @@ ledpin = 12                             # PWM pin connected to LED
 #  PWM_MODE_MS = 0
 #  PWM_MODE_BAL = 1
 
-wiringpi.wiringPiSetupPhys()  # OR, using P1 header pin numbers  
-wiringpi.pinMode(ledpin,wiringpi.OUTPUT)      
+wiringpi.wiringPiSetupPhys()  # OR, using P1 header pin numbers
+wiringpi.pinMode(ledpin,wiringpi.OUTPUT)
 
 
 

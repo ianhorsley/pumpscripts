@@ -20,7 +20,7 @@ def get_pwm(power):
 def get_pwm_max():
     #returns pwm for max power, <10
     return 5
-    
+
 def get_pwm_min():
     #returns pwm for min power, 84< <92?
     return 88

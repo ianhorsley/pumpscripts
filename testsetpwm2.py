@@ -13,7 +13,7 @@ ledpin = 12                             # PWM pin connected to LED
 #  PWM_MODE_MS = 0
 #  PWM_MODE_BAL = 1
 
-wiringpi.wiringPiSetupPhys()  # OR, using P1 header pin numbers  
+wiringpi.wiringPiSetupPhys()  # OR, using P1 header pin numbers
 wiringpi.pinMode(ledpin,wiringpi.PWM_OUTPUT)      # pwm only works on P1 header pin 12  
 wiringpi.pwmSetMode(wiringpi.PWM_MODE_MS)
 
@@ -34,19 +34,19 @@ wiringpi.pwmWrite(ledpin, int(pwmrange/2))    # duty cycle between 0 and 1024. 0
 
 defaultduty = 50
 
+def tryrange(start, end, step):
+    """loop through a range of duty cycles"""
+    for duty in range(0,51,10):
+        wiringpi.pwmWrite(ledpin, int(round(pwmrange*duty/100))) #provide duty cycle in the range 0-100
+        print(duty)
+        sleep(5)
+
 try:
     while True:
-        for duty in range(0,51,10):
-            wiringpi.pwmWrite(ledpin, int(round(pwmrange*duty/100))) #provide duty cycle in the range 0-100
-            print(duty)
-            sleep(5)
+        tryrange(0, 51, 10)
         sleep(0.5)
-
-        for duty in range(100,-1,-10):
-            wiringpi.pwmWrite(ledpin, int(round(pwmrange*duty/100)))
-            print(duty)
-            sleep(5)
-        sleep(0.5) 
+        tryrange(100, -1, -10)
+        sleep(0.5)
 except KeyboardInterrupt: # trap a CTRL+C keyboard interrupt
     print("keyboard interrupt")
 

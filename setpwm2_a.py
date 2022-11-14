@@ -36,7 +36,7 @@ def writetopwm(pwm_level):
     except IndexError:
         raise SystemExit(f"Usage: {sys.argv[0]} dutycycle")
     except ValueError:
-        raise SystemExit(f"duty cycle must be int from 0 to 100")
+        raise SystemExit("duty cycle must be int from 0 to 100")
     except KeyboardInterrupt: # trap a CTRL+C keyboard interrupt
         print("keyboard interrupt")
 

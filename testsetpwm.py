@@ -12,7 +12,7 @@ GPIO.setmode(GPIO.BOARD)		#set pin numbering system
 GPIO.setup(ledpin,GPIO.OUT,initial=GPIO.LOW)
 pi_pwm = GPIO.PWM(ledpin,500)		#create PWM instance with frequency
 #pi_pwm.pwmSetMode(Gpio.PWM_MODE_MS)
-pi_pwm.start(0)				#start PWM of required Duty Cycle 
+pi_pwm.start(0)				#start PWM of required Duty Cycle
 while True:
     for duty in range(0,51,10):
         pi_pwm.ChangeDutyCycle(duty) #provide duty cycle in the range 0-100
