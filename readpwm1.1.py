@@ -14,8 +14,8 @@ class PWM_read:
         GPIO.setup(self.gpio, GPIO.IN, pull_up_down=GPIO.PUD_UP) # Pull up to 3.3V
 
         self._high_tick = None
-        self._p = None
-        self._hp = None
+        self._p = None #low period
+        self._hp = None #high period
         self._p_avg = None
         self._hp_avg = None
         self._avg_n = 5.0
@@ -23,54 +23,51 @@ class PWM_read:
         # Add event to detect
         self._cb = GPIO.add_event_detect(self.gpio, GPIO.BOTH, self._cbf)
 
+    def _slide_avg(average, new_period):
+        if average is not None and new_period is not None:
+            return average + (new_period - average)/self._avg_n
+        else:
+            return new_period
+
     def _cbf(self, n):
         tick = time.time()
         if GPIO.input(self.gpio):
             if self._high_tick is not None:
                 self._p = tick - self._high_tick
-            if self._p_avg is not None and self._p is not None:
-                self._p_avg = self._p_avg + (self._p - self._p_avg)/self._avg_n;
-            else:
-                self._p_avg = self._p
+            self._p_avg = self._slide_avg(self._p_avg, self._p)
             self._high_tick = tick
         else:
             if self._high_tick is not None:
                 self._hp = tick - self._high_tick
-            if self._hp_avg is not None and self._hp is not None:
-                self._hp_avg = self._hp_avg + (self._hp - self._hp_avg)/self._avg_n;
-            else:
-                self._hp_avg = self._hp
-      #print(self._p_avg)
-      #if (self._p is not None) and (self._hp is not None):
-      #   print("g={} f={:.1f} dc={:.1f}".
-      #      format(gpio, 1000000.0/self._p, 100.0 * self._hp/self._p))
+            self._hp_avg = self._slide_avg(self._hp_avg, self._hp)
+        #print(self._p_avg)
+        #if (self._p is not None) and (self._hp is not None):
+        #   print("g={} f={:.1f} dc={:.1f}".
+        #      format(gpio, 1000000.0/self._p, 100.0 * self._hp/self._p))
 
     def cancel(self):
         GPIO.remove_event_detect(self.gpio)
         GPIO.cleanup()
 
-    def get_freq(self):
-        if self._p is not None:
+    def _proc_freq(self, period):
+        if period is not None:
             if ((time.time() - self._high_tick) < (1 / self._min_freq)):
-               return 1.0/self._p
+               return 1.0/period
             else:
                return 0
         else:
             return 0
 
-    def get_avg_freq(self):
-        if self._p_avg is not None:
-            if ((time.time() - self._high_tick) < (1 / self._min_freq)):
-                return 1.0/self._p_avg
-            else:
-                return 0
-        else:
-            return 0
+    def get_freq(self):
+        return self._proc_freq(self._p)
 
-    def get_duty(self):
-        if (self._p is not None) and (self._hp is not None):
+    def get_avg_freq(self):
+        return self._proc_freq(self._p_avg)
+
+    def _proc_duty(self, period, high_period):
+        if (period is not None) and (high_period is not None):
             if time.time() - self._high_tick < 1 / self._min_freq:
-                return 100.0 * self._hp/self._p
+                return 100.0 * high_period/period
             elif GPIO.input(self.gpio):
                 print("high")
                 print(GPIO.input(self.gpio))
@@ -80,16 +77,11 @@ class PWM_read:
         else:
             return -1
 
+    def get_duty(self):
+        return self._proc_duty(self, self._p, self._hp)
+
     def get_avg_duty(self):
-        if (self._p_avg is not None) and (self._hp_avg is not None):
-            if ((time.time() - self._high_tick) < (1 / self._min_freq)):
-                return 100.0 * self._hp_avg/self._p_avg
-            elif GPIO.input(self.gpio):
-                return 100.0
-            else:
-                return 0.0
-        else:
-            return -1
+        return self._proc_duty(self, self._p_avg, self._hp_avg)
 
 p1 = PWM_read(24)
 
