@@ -50,7 +50,7 @@ class PWM_read:
         GPIO.cleanup()
 
     def get_freq(self):
-        if p1._p is not None:
+        if self._p is not None:
             if ((time.time() - self._high_tick) < (1 / self._min_freq)):
                return 1.0/self._p
             else:
@@ -59,7 +59,7 @@ class PWM_read:
             return 0
 
     def get_avg_freq(self):
-        if p1._p_avg is not None:
+        if self._p_avg is not None:
             if ((time.time() - self._high_tick) < (1 / self._min_freq)):
                 return 1.0/self._p_avg
             else:
@@ -68,7 +68,7 @@ class PWM_read:
             return 0
 
     def get_duty(self):
-        if (p1._p is not None) and (p1._hp is not None):
+        if (self._p is not None) and (self._hp is not None):
             if time.time() - self._high_tick < 1 / self._min_freq:
                 return 100.0 * self._hp/self._p
             elif GPIO.input(self.gpio):
@@ -81,7 +81,7 @@ class PWM_read:
             return -1
 
     def get_avg_duty(self):
-        if (p1._p_avg is not None) and (p1._hp_avg is not None):
+        if (self._p_avg is not None) and (self._hp_avg is not None):
             if ((time.time() - self._high_tick) < (1 / self._min_freq)):
                 return 100.0 * self._hp_avg/self._p_avg
             elif GPIO.input(self.gpio):
