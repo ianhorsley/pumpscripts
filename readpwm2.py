@@ -5,45 +5,45 @@ import time
 import pigpio # http://abyz.co.uk/rpi/pigpio/python.html
 
 class PWM_read:
-   def __init__(self, pi, gpio):
-      self.pi = pi
-      self.gpio = gpio
+    def __init__(self, pi, gpio):
+        self.pi = pi
+        self.gpio = gpio
 
-      self._high_tick = None
-      self._p = None
-      self._hp = None
-      self._p_avg = None
-      self._hp_avg = None
-      self._avg_n = 20.0
+        self._high_tick = None
+        self._p = None
+        self._hp = None
+        self._p_avg = None
+        self._hp_avg = None
+        self._avg_n = 20.0
 
-      self._cb = pi.callback(gpio, pigpio.EITHER_EDGE, self._cbf)
+        self._cb = pi.callback(gpio, pigpio.EITHER_EDGE, self._cbf)
 
-   def _cbf(self, gpio, level, tick):
-      #print(gpio, level, tick)
-      if level == 1:
-         if self._high_tick is not None:
-            self._p = pigpio.tickDiff(self._high_tick, tick)
-         if self._p_avg is not None and self._p is not None:
-            self._p_avg = self._p_avg + (self._p - self._p_avg)/self._avg_n
-         else:
-            self._p_avg = self._p
-         self._high_tick = tick
-         #print(level, self._p)
-      elif level == 0:
-         if self._high_tick is not None:
-            self._hp = pigpio.tickDiff(self._high_tick, tick)
-         if self._hp_avg is not None and self._hp is not None:
-            self._hp_avg = self._hp_avg + (self._hp - self._hp_avg)/self._avg_n
-         else:
-            self._hp_avg = self._hp
-         #print(level, self._hp)
-      #print(self._p_avg)
-      #if (self._p is not None) and (self._hp is not None):
-      #   print("g={} f={:.1f} dc={:.1f}".
-      #      format(gpio, 1000000.0/self._p, 100.0 * self._hp/self._p))
+    def _slide_avg(average, new_period):
+        if average is not None and new_period is not None:
+            return average + (new_period - average)/self._avg_n
+        else:
+            return new_period
 
-   def cancel(self):
-      self._cb.cancel()
+    def _cbf(self, gpio, level, tick):
+        #print(gpio, level, tick)
+        if level == 1:
+            if self._high_tick is not None:
+                self._p = pigpio.tickDiff(self._high_tick, tick)
+            self._p_avg = self._slide_avg(self._p_avg, self._p)
+            self._high_tick = tick
+            #print(level, self._p)
+        elif level == 0:
+            if self._high_tick is not None:
+                self._hp = pigpio.tickDiff(self._high_tick, tick)
+            self._hp_avg = self._slide_avg(self._hp_avg, self._hp)
+            #print(level, self._hp)
+        #print(self._p_avg)
+        #if (self._p is not None) and (self._hp is not None):
+        #   print("g={} f={:.1f} dc={:.1f}".
+        #      format(gpio, 1000000.0/self._p, 100.0 * self._hp/self._p))
+
+    def cancel(self):
+        self._cb.cancel()
 
 pi = pigpio.pi()
 
