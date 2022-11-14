@@ -1,10 +1,11 @@
 #!/usr/bin/env python3
 '''
-Control the Brightness of LED using PWM on Raspberry Pi
+Control pump power using PWM on Raspberry Pi
 
 '''
 
 import setpwm2_a
+import sys
 
 def clamp(n, minn, maxn):
     return max(min(maxn, n), minn)
