@@ -24,7 +24,7 @@ class PWM_read:
          if self._high_tick is not None:
             self._p = pigpio.tickDiff(self._high_tick, tick)
          if self._p_avg is not None and self._p is not None:
-            self._p_avg = self._p_avg + (self._p - self._p_avg)/self._avg_n;
+            self._p_avg = self._p_avg + (self._p - self._p_avg)/self._avg_n
          else:
             self._p_avg = self._p
          self._high_tick = tick
@@ -33,7 +33,7 @@ class PWM_read:
          if self._high_tick is not None:
             self._hp = pigpio.tickDiff(self._high_tick, tick)
          if self._hp_avg is not None and self._hp is not None:
-            self._hp_avg = self._hp_avg + (self._hp - self._hp_avg)/self._avg_n;
+            self._hp_avg = self._hp_avg + (self._hp - self._hp_avg)/self._avg_n
          else:
             self._hp_avg = self._hp
          #print(level, self._hp)
