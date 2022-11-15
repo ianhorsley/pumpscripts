@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 import time
 
@@ -26,17 +26,20 @@ class PWM_read:
 
     def _cbf(self, gpio, level, tick):
         #print(gpio, level, tick)
-        if level == 1:
-            if self._high_tick is not None:
-                self._p = pigpio.tickDiff(self._high_tick, tick)
-            self._p_avg = self._slide_avg(self._p_avg, self._p)
-            self._high_tick = tick
-            #print(level, self._p)
-        elif level == 0:
-            if self._high_tick is not None:
-                self._hp = pigpio.tickDiff(self._high_tick, tick)
-            self._hp_avg = self._slide_avg(self._hp_avg, self._hp)
-            #print(level, self._hp)
+        match level:
+            case 1:
+                if self._high_tick is not None:
+                    self._p = pigpio.tickDiff(self._high_tick, tick)
+                self._p_avg = self._slide_avg(self._p_avg, self._p)
+                self._high_tick = tick
+                #print(level, self._p)
+            case 0:
+                if self._high_tick is not None:
+                    self._hp = pigpio.tickDiff(self._high_tick, tick)
+                self._hp_avg = self._slide_avg(self._hp_avg, self._hp)
+                #print(level, self._hp)
+            case _:
+                print("undefined level")
         #print(self._p_avg)
         #if (self._p is not None) and (self._hp is not None):
         #   print("g={} f={:.1f} dc={:.1f}".
