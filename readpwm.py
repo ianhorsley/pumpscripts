@@ -44,7 +44,7 @@ def change(n):
             t_rise, freq_rise = _calc_freq(t_rise)
         else:
             t_fell, freq_fall = _calc_freq(t_fell)
-            duty = 100 * (t_fell - t_rise) / dt
+            duty = 100 * (t_fell - t_rise) * freq_fall
     except ValueError as ve:
         print(ve)
 
