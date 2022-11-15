@@ -50,11 +50,10 @@ class PWM_read:
         GPIO.cleanup()
 
     def _proc_freq(self, period):
-        if period is not None:
-            if ((time.time() - self._high_tick) < (1 / self._min_freq)):
-               return 1.0/period
-            else:
-               return 0
+        if period is None:
+            return 0
+        if ((time.time() - self._high_tick) < (1 / self._min_freq)):
+            return 1.0/period
         else:
             return 0
 
@@ -65,17 +64,15 @@ class PWM_read:
         return self._proc_freq(self._p_avg)
 
     def _proc_duty(self, period, high_period):
-        if (period is not None) and (high_period is not None):
-            if time.time() - self._high_tick < 1 / self._min_freq:
-                return 100.0 * high_period/period
-            elif GPIO.input(self.gpio):
-                print("high")
-                print(GPIO.input(self.gpio))
-                return 100.0
-            else:
-                return 0.0
-        else:
+        if period is None or high_period is None:
             return -1
+        if time.time() - self._high_tick < 1 / self._min_freq:
+            return 100.0 * high_period/period
+        if GPIO.input(self.gpio):
+            print("high")
+            print(GPIO.input(self.gpio))
+            return 100.0
+        return 0.0
 
     def get_duty(self):
         return self._proc_duty(self._p, self._hp)
