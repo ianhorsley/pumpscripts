@@ -18,7 +18,7 @@ class PWM_read:
 
         self._cb = pi.callback(gpio, pigpio.EITHER_EDGE, self._cbf)
 
-    def _slide_avg(average, new_period):
+    def _slide_avg(self, average, new_period):
         if average is not None and new_period is not None:
             return average + (new_period - average)/self._avg_n
         else:

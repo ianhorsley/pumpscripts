@@ -23,7 +23,7 @@ class PWM_read:
         # Add event to detect
         self._cb = GPIO.add_event_detect(self.gpio, GPIO.BOTH, self._cbf)
 
-    def _slide_avg(average, new_period):
+    def _slide_avg(self, average, new_period):
         if average is not None and new_period is not None:
             return average + (new_period - average)/self._avg_n
         else:
@@ -78,10 +78,10 @@ class PWM_read:
             return -1
 
     def get_duty(self):
-        return self._proc_duty(self, self._p, self._hp)
+        return self._proc_duty(self._p, self._hp)
 
     def get_avg_duty(self):
-        return self._proc_duty(self, self._p_avg, self._hp_avg)
+        return self._proc_duty(self._p_avg, self._hp_avg)
 
 p1 = PWM_read(24)
 
@@ -99,4 +99,4 @@ except KeyboardInterrupt: # trap a CTRL+C keyboard interrupt
 finally:
     p1.cancel() # resets all GPIO ports used by this function
 
- 
+
