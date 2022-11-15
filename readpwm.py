@@ -19,35 +19,35 @@ t_fell = t_rise =  time.time()
 duty = 0
 freq_fall = freq_rise = 0
 
+def _calc_freq(t_base):
+    """calculate the time change and frequency from base time"""
+    curr_t = time.time()
+
+    dt = curr_t - t_base
+    if dt < 0.005:
+        raise ValueError("Pulse to short") # Reject spuriously short pulses
+
+    freq = 1 / dt
+
+    return curr_t, freq
+
 # Calculate pulse frequency and RPM
 def change(n):
-    if GPIO.input(TACH) :
-        global t_rise
-        global freq_rise
+    global t_fell
+    global t_rise
+    global freq_fall
+    global freq_rise
+    global duty
 
-        rise_t_temp = time.time()
+    try:
+        if GPIO.input(TACH) :
+            t_rise, freq_rise = _calc_freq(t_rise)
+        else:
+            t_fell, freq_fall = _calc_freq(t_fell)
+            duty = 100 * (t_fell - t_rise) / dt
+    except ValueError as ve:
+        print(ve)
 
-        dt = rise_t_temp - t_rise
-        if dt < 0.005: return # Reject spuriously short pulses
-
-        freq_rise = 1 / dt
-        t_rise = rise_t_temp
-    else:
-
-        global t_fell
-        global t_rise
-        global freq_fall
-        global duty
-
-        fall_t_temp = time.time()
-
-        dt = fall_t_temp - t_fell
-        if dt < 0.005: return # Reject spuriously short pulses
-
-        freq_fall = 1 / dt
-        t_fell = fall_t_temp
-
-        duty = 100 * (fall_t_temp - t_rise) / dt
 
 # Add event to detect
 GPIO.add_event_detect(TACH, GPIO.BOTH, change)
