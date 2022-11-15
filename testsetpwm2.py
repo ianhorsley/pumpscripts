@@ -41,6 +41,7 @@ def tryrange(start, end, step):
         print(duty)
         sleep(5)
 
+
 try:
     while True:
         tryrange(0, 51, 10)

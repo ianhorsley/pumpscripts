@@ -54,7 +54,7 @@ GPIO.add_event_detect(TACH, GPIO.BOTH, change)
 
 try:
     while True:
-        print "%.f Hz, %.f Hz, %.f" % (freq_rise, freq_fall, duty)
+        print("%.f Hz, %.f Hz, %.f" % (freq_rise, freq_fall, duty))
         freq_rise = freq_fall = duty = 0
         time.sleep(1)   # Detect every second
 

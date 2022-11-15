@@ -53,6 +53,7 @@ def tempwritetopwm(pwm_level, time):
         wiringpi.pinMode(pwmpin,wiringpi.INPUT)
         wiringpi.pullUpDnControl(pwmpin,wiringpi.PUD_DOWN)
 
+
 if __name__ == "__main__":
 
     writetopwm(sys.argv[1])
