@@ -80,6 +80,7 @@ class PWM_read:
     def get_avg_duty(self):
         return self._proc_duty(self._p_avg, self._hp_avg)
 
+
 p1 = PWM_read(24)
 
 try:
