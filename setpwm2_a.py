@@ -20,8 +20,8 @@ pwmclockdiv = 192   # 19.2 Mhz divided by 3840 is 5 Khz. 192 for 100Hz 48 for 4k
 # divided by 3840 to give us 5 Khz.
 pwmrange = 1000 # range of 2500 would give us half second.
 
-wiringpi.wiringPiSetupPhys()  # OR, using P1 header pin numbers  
-wiringpi.pinMode(pwmpin,wiringpi.PWM_OUTPUT)      # pwm only works on P1 header pin 12  
+wiringpi.wiringPiSetupPhys()  # OR, using P1 header pin numbers
+wiringpi.pinMode(pwmpin,wiringpi.PWM_OUTPUT)      # pwm only works on P1 header pin 12
 wiringpi.pwmSetMode(wiringpi.PWM_MODE_MS)
 
 wiringpi.pwmSetClock(pwmclockdiv) #set clock divider
@@ -44,14 +44,14 @@ def tempwritetopwm(pwm_level, time):
     """write level to pwm and revert after time(s)"""
     try:
         duty = int(pwm_level)
-        wiringpi.pwmWrite(ledpin, int(round(pwmrange*duty/100))) #provide duty cycle in the range 0-100
+        wiringpi.pwmWrite(pwmpin, int(round(pwmrange*duty/100))) #provide duty cycle in the range 0-100
         sleep(time)
     except KeyboardInterrupt: # trap a CTRL+C keyboard interrupt
         print("keyboard interrupt")
     finally:
         #do we need to write full power before disconnecting?
-        wiringpi.pinMode(ledpin,wiringpi.INPUT)
-        wiringpi.pullUpDnControl(ledpin,wiringpi.PUD_DOWN)
+        wiringpi.pinMode(pwmpin,wiringpi.INPUT)
+        wiringpi.pullUpDnControl(pwmpin,wiringpi.PUD_DOWN)
 
 if __name__ == "__main__":
 

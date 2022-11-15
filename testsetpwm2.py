@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 '''
 Control the Brightness of LED using PWM on Raspberry Pi
- 
+
 '''
 
 #import RPi.GPIO as GPIO
@@ -14,7 +14,7 @@ ledpin = 12                             # PWM pin connected to LED
 #  PWM_MODE_BAL = 1
 
 wiringpi.wiringPiSetupPhys()  # OR, using P1 header pin numbers
-wiringpi.pinMode(ledpin,wiringpi.PWM_OUTPUT)      # pwm only works on P1 header pin 12  
+wiringpi.pinMode(ledpin,wiringpi.PWM_OUTPUT)      # pwm only works on P1 header pin 12
 wiringpi.pwmSetMode(wiringpi.PWM_MODE_MS)
 
 # set the clock divisor to reduce the 19.2 Mhz clock

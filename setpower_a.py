@@ -10,7 +10,7 @@ import sys
 def clamp(n, minn, maxn):
     return max(min(maxn, n), minn)
 
-def get_pwm(power): 
+def get_pwm(power):
     #takes a percentage power and returns pwm setting. 0-100 from min to max pump speed pwm (84 - 10).
     boundedpower = clamp(power, 0, 100)
     if(power != boundedpower):
@@ -29,6 +29,7 @@ def get_pwm_min():
 def get_pwm_stop():
     #returns pwm for stop of the motor > 92
     return 98
+
 
 power = int(sys.argv[1])
 duty = get_pwm(power)
