@@ -2,7 +2,8 @@
 
 import time
 
-import pigpio # http://abyz.co.uk/rpi/pigpio/python.html
+import pigpio  # http://abyz.co.uk/rpi/pigpio/python.html
+
 
 class PWM_read:
     def __init__(self, pi, gpio):
@@ -25,28 +26,26 @@ class PWM_read:
             return new_period
 
     def _cbf(self, gpio, level, tick):
-        #print(gpio, level, tick)
+
         match level:
             case 1:
                 if self._high_tick is not None:
                     self._p = pigpio.tickDiff(self._high_tick, tick)
                 self._p_avg = self._slide_avg(self._p_avg, self._p)
                 self._high_tick = tick
-                #print(level, self._p)
+
             case 0:
                 if self._high_tick is not None:
                     self._hp = pigpio.tickDiff(self._high_tick, tick)
                 self._hp_avg = self._slide_avg(self._hp_avg, self._hp)
-                #print(level, self._hp)
+
             case _:
                 print("undefined level")
-        #print(self._p_avg)
-        #if (self._p is not None) and (self._hp is not None):
-        #   print("g={} f={:.1f} dc={:.1f}".
-        #      format(gpio, 1000000.0/self._p, 100.0 * self._hp/self._p))
+
 
     def cancel(self):
         self._cb.cancel()
+
 
 pi = pigpio.pi()
 
@@ -54,16 +53,16 @@ p1 = PWM_read(pi, 24)
 
 try:
     while True:
-        #print "%.f Hz, %.f Hz, %.f" % (freq_rise, freq_fall, duty)
         if (p1._p is not None) and (p1._p_avg is not None) and (p1._hp is not None):
             print("g={} f={:.1f} f={:.1f} dc={:.1f} dc={:.1f}".
-                format(24, 1000000.0/p1._p, 1000000.0/p1._p_avg, 100.0 * p1._hp/p1._p, 100.0 * p1._hp_avg/p1._p_avg))
+                format(24, 1000000.0/p1._p, 1000000.0/p1._p_avg,
+                        100.0 * p1._hp/p1._p, 100.0 * p1._hp_avg/p1._p_avg))
         else:
             print("no data yet")
         p1._p = None
         p1._hp = None
         time.sleep(1)   # Detect every second
 
-except KeyboardInterrupt: # trap a CTRL+C keyboard interrupt
-    p1.cancel() # resets all GPIO ports used by this function
+except KeyboardInterrupt:  # trap a CTRL+C keyboard interrupt
+    p1.cancel()  # resets all GPIO ports used by this function
     pi.stop()

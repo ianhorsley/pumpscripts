@@ -6,20 +6,22 @@ import time
 # Setup GPIO
 GPIO.setmode(GPIO.BCM)
 
+
 class PWM_read:
     def __init__(self, gpio):
         self.gpio = gpio
 
         #GPIO.setwarnings(False)
-        GPIO.setup(self.gpio, GPIO.IN, pull_up_down=GPIO.PUD_UP) # Pull up to 3.3V
+        # Pull up to 3.3V
+        GPIO.setup(self.gpio, GPIO.IN, pull_up_down=GPIO.PUD_UP)
 
         self._high_tick = None
-        self._p = None #low period
-        self._hp = None #high period
+        self._p = None  # low period
+        self._hp = None  # high period
         self._p_avg = None
         self._hp_avg = None
         self._avg_n = 5.0
-        self._min_freq = 20.0 # in Hz
+        self._min_freq = 20.0  # in Hz
         # Add event to detect
         self._cb = GPIO.add_event_detect(self.gpio, GPIO.BOTH, self._cbf)
 
@@ -40,10 +42,6 @@ class PWM_read:
             if self._high_tick is not None:
                 self._hp = tick - self._high_tick
             self._hp_avg = self._slide_avg(self._hp_avg, self._hp)
-        #print(self._p_avg)
-        #if (self._p is not None) and (self._hp is not None):
-        #   print("g={} f={:.1f} dc={:.1f}".
-        #      format(gpio, 1000000.0/self._p, 100.0 * self._hp/self._p))
 
     def cancel(self):
         GPIO.remove_event_detect(self.gpio)
@@ -85,16 +83,12 @@ p1 = PWM_read(24)
 
 try:
     while True:
-        #print "%.f Hz, %.f Hz, %.f" % (freq_rise, freq_fall, duty)
         print("g={} f={:.1f} f={:.1f} dc={:.1f} dc={:.1f}".
             format(24, p1.get_freq(), p1.get_avg_freq(), p1.get_duty(), p1.get_avg_duty()))
-        #p1._p = None
-        #p1._hp = None
-        time.sleep(1)   # Detect every second
 
-except KeyboardInterrupt: # trap a CTRL+C keyboard interrupt
+        time.sleep(1)  # Detect every second
+
+except KeyboardInterrupt:  # trap a CTRL+C keyboard interrupt
     print("keyboard exit")
 finally:
-    p1.cancel() # resets all GPIO ports used by this function
-
-
+    p1.cancel()  # resets all GPIO ports used by this function
