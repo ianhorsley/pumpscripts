@@ -33,13 +33,17 @@ class PWM_read:
     def _cbf(self, n):
         tick = time.time()
         if GPIO.input(self.gpio):
-            if self._high_tick is not None:
+            try:
                 self._p = tick - self._high_tick
+            except TypeError:
+                pass
             self._p_avg = self._slide_avg(self._p_avg, self._p)
             self._high_tick = tick
         else:
-            if self._high_tick is not None:
+            try:
                 self._hp = tick - self._high_tick
+            except TypeError:
+                pass
             self._hp_avg = self._slide_avg(self._hp_avg, self._hp)
 
     def cancel(self):

@@ -27,20 +27,20 @@ class PWM_read:
 
     def _cbf(self, gpio, level, tick):
 
-        match level:
-            case 1:
-                if self._high_tick is not None:
-                    self._p = pigpio.tickDiff(self._high_tick, tick)
-                self._p_avg = self._slide_avg(self._p_avg, self._p)
-                self._high_tick = tick
+        if level == 1:
+            if self._high_tick is not None:
+                self._p = pigpio.tickDiff(self._high_tick, tick)
+            self._p_avg = self._slide_avg(self._p_avg, self._p)
+            self._high_tick = tick
+            return
 
-            case 0:
-                if self._high_tick is not None:
-                    self._hp = pigpio.tickDiff(self._high_tick, tick)
-                self._hp_avg = self._slide_avg(self._hp_avg, self._hp)
+        if level == 0:
+            if self._high_tick is not None:
+                self._hp = pigpio.tickDiff(self._high_tick, tick)
+            self._hp_avg = self._slide_avg(self._hp_avg, self._hp)
+            return
 
-            case _:
-                print("undefined level")
+        print("undefined level")
 
     def cancel(self):
         self._cb.cancel()
