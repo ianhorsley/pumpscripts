@@ -3,6 +3,8 @@
 Control pump power using PWM on Raspberry Pi
 Manage power based on flow and return temperatures
 Report states to emonhub
+
+python3 -m pip install simple-pid
 '''
 
 # standard library modules used in code
