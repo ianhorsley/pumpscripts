@@ -15,9 +15,15 @@ from simple_pid import PID
 import setpower_a
 import setpwm2_a
 # temperature monitoring related imports
-from ..emonreporter.src.rept_1wire_hmv2 import initialise_setup, initialise_1wire, get_1wire_data
-from ..emonreporter.src.rept_1wire_hmv2 import LocalDatalogger, get_args, send_message
-import ..emonreporter.src.emonhub_coder
+from ..emonreporter.src.rept_1wire_hmv2 import (
+    initialise_setup,
+    initialise_1wire,
+    get_1wire_data,
+    LocalDatalogger,
+    get_args,
+    send_message
+)
+from ..emonreporter.src import emonhub_coder
 # hm imports
 from heatmisercontroller import logging_setup
 
@@ -26,16 +32,18 @@ def main():
     args = get_args('Rolling pump control from temperature and reporting')
 
     # turn the arguments into numbers
-    sample_interval=float(args.sample_interval)
+    sample_interval = float(args.sample_interval)
 
     setup, localconfigfile = initialise_setup(args.config_file)
 
-    #setup logging
-    logging_setup.initialize_logger_full(setup.settings['logging']['logfolder'], logging.DEBUG)
+    # setup logging
+    logging_setup.initialize_logger_full(
+        setup.settings['logging']['logfolder'],
+        logging.DEBUG)
 
     # tell the user what is happening
     logging.info("Rolling pump control from temperature and reporting")
-    logging.info("  sample interval: %d seconds", sample_interval )
+    logging.info("  sample interval: %d seconds", sample_interval)
 
     onewirenetwork, sensorlist1wire = initialise_1wire()
 
@@ -58,12 +66,13 @@ def main():
 
         # read temps
         # get time now and record it
-        read_time = int(time.time()) # we only record to integer seconds
+        read_time = int(time.time())  # we only record to integer seconds
 
         logging.info("Logging cyle at %d", read_time)
-        temps, count, output_message = get_1wire_data(onewirenetwork, sensorlist1wire, read_time)
+        temps, count, output_message = get_1wire_data(onewirenetwork, 
+                                                      sensorlist1wire,
+                                                      read_time)
 
-        
         if count == 2:
             # decide power level
             flow_temp = max(temps)
@@ -71,7 +80,7 @@ def main():
             temp_ratio = return_temp / flow_temp
 
             power = pid(temp_ratio)
-            
+
             # convert to pwm duty cycle
             duty = setpower_a.get_pwm(power)
             print('power={:d}, pwm={:d}'.format(power, duty))
@@ -80,7 +89,7 @@ def main():
             power = int(setup.settings['emonsocket']['temperaturenull'])
 
         # report temps and power level
-        output_message += ' ' + ' '.join(map(str,emonhub_coder.encode("h", round(power * 10 ))))
+        output_message += ' ' + ' '.join(map(str, emonhub_coder.encode("h", round(power * 10 ))))
         send_message(setup, output_message)
 
 
