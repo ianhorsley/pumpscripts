@@ -36,7 +36,7 @@ def writetopwm(pwm_level):
         duty = int(pwm_level)
         # provide duty cycle in the range 0-100
         wiringpi.pwmWrite(pwmpin, int(round(pwmrange*duty/100)))
-        sleep(30)
+        # sleep(30)
     except IndexError:
         raise SystemExit(f"Usage: {sys.argv[0]} dutycycle")
     except ValueError:
