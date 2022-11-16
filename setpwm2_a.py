@@ -26,8 +26,8 @@ wiringpi.wiringPiSetupPhys()  # OR, using P1 header pin numbers
 wiringpi.pinMode(pwmpin, wiringpi.PWM_OUTPUT)
 wiringpi.pwmSetMode(wiringpi.PWM_MODE_MS)
 
-wiringpi.pwmSetClock(pwmclockdiv) # set clock divider
-wiringpi.pwmSetRange(pwmrange) # set pwm range counter
+wiringpi.pwmSetClock(pwmclockdiv)  # set clock divider
+wiringpi.pwmSetRange(pwmrange)  # set pwm range counter
 
 
 def writetopwm(pwm_level):
@@ -52,7 +52,7 @@ def tempwritetopwm(pwm_level, time):
         # provide duty cycle in the range 0-100
         wiringpi.pwmWrite(pwmpin, int(round(pwmrange*duty/100)))
         sleep(time)
-    except KeyboardInterrupt: # trap a CTRL+C keyboard interrupt
+    except KeyboardInterrupt:  # trap a CTRL+C keyboard interrupt
         print("keyboard interrupt")
     finally:
         # do we need to write full power before disconnecting?
@@ -63,4 +63,3 @@ def tempwritetopwm(pwm_level, time):
 if __name__ == "__main__":
 
     writetopwm(sys.argv[1])
-

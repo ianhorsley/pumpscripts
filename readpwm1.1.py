@@ -84,7 +84,8 @@ p1 = PWM_read(24)
 try:
     while True:
         print("g={} f={:.1f} f={:.1f} dc={:.1f} dc={:.1f}".
-            format(24, p1.get_freq(), p1.get_avg_freq(), p1.get_duty(), p1.get_avg_duty()))
+              format(24, p1.get_freq(), p1.get_avg_freq(),
+                     p1.get_duty(), p1.get_avg_duty()))
 
         time.sleep(1)  # Detect every second
 

@@ -11,7 +11,7 @@ from time import sleep
 ledpin = 12             # PWM pin connected to LED
 
 wiringpi.wiringPiSetupPhys()  # OR, using P1 header pin numbers
-wiringpi.pinMode(ledpin,wiringpi.PWM_OUTPUT)
+wiringpi.pinMode(ledpin, wiringpi.PWM_OUTPUT)
 # PWM_MODE_MS, PWM_MODE_BAL
 wiringpi.pwmSetMode(wiringpi.PWM_MODE_MS)
 
@@ -19,7 +19,7 @@ wiringpi.pwmSetMode(wiringpi.PWM_MODE_MS)
 # to something slower, 5 Khz.
 # Range of pwmSetClock() is 2 to 4095.
 # 19.2 Mhz divided by 3840 is 5 Khz. 192 for 100Hz 48 for 4kHz
-wiringpi.pwmSetClock (192)
+wiringpi.pwmSetClock(192)
 
 # set the PWM range which is the value for the range counter
 # which is decremented at the modified clock frequency.
@@ -37,7 +37,7 @@ defaultduty = 50
 
 def tryrange(start, end, step):
     """loop through a range of duty cycles"""
-    for duty in range(0,51,10):
+    for duty in range(0, 51, 10):
         # provide duty cycle in the range 0-100
         wiringpi.pwmWrite(ledpin, int(round(pwmrange*duty/100)))
         print(duty)
