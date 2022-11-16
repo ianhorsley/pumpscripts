@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 '''
 Control the PWM on Raspberry Pi
+If run from command line takes PWM duty cycle input 0-100%
 '''
 
 #import RPi.GPIO as GPIO
@@ -20,8 +21,8 @@ pwmclockdiv = 192   # 19.2 Mhz divided by 3840 is 5 Khz. 192 for 100Hz 48 for 4k
 # divided by 3840 to give us 5 Khz.
 pwmrange = 1000 # range of 2500 would give us half second.
 
-wiringpi.wiringPiSetupPhys()  # OR, using P1 header pin numbers
-wiringpi.pinMode(pwmpin,wiringpi.PWM_OUTPUT)      # pwm only works on P1 header pin 12
+wiringpi.wiringPiSetupPhys() # OR, using P1 header pin numbers
+wiringpi.pinMode(pwmpin,wiringpi.PWM_OUTPUT) # pwm only works on P1 header pin 12
 wiringpi.pwmSetMode(wiringpi.PWM_MODE_MS)
 
 wiringpi.pwmSetClock(pwmclockdiv) #set clock divider

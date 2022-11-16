@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 '''
 Control pump power using PWM on Raspberry Pi
-
+Takes command line input of power 0-100%
 '''
 
 import setpwm2_a
@@ -32,6 +32,7 @@ def get_pwm_stop():
 
 
 power = int(sys.argv[1])
+#convert to pwm duty cycle
 duty = get_pwm(power)
 print('power={:d}, pwm={:d}'.format(power,duty))
 
