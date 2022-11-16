@@ -11,7 +11,7 @@ wiringpi.pinMode(ledpin, wiringpi.OUTPUT)
 try:
     wiringpi.digitalWrite(ledpin, wiringpi.HIGH)
     sleep(60)
-except KeyboardInterrupt: # trap a CTRL+C keyboard interrupt
+except KeyboardInterrupt:  # trap a CTRL+C keyboard interrupt
     print("keyboard interrupt")
 
 finally:

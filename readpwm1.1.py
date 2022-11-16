@@ -11,7 +11,6 @@ class PWM_read:
     def __init__(self, gpio):
         self.gpio = gpio
 
-        #GPIO.setwarnings(False)
         # Pull up to 3.3V
         GPIO.setup(self.gpio, GPIO.IN, pull_up_down=GPIO.PUD_UP)
 

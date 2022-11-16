@@ -42,7 +42,6 @@ class PWM_read:
             case _:
                 print("undefined level")
 
-
     def cancel(self):
         self._cb.cancel()
 
@@ -55,8 +54,8 @@ try:
     while True:
         if p1._p is not None and p1._p_avg is not None and p1._hp is not None:
             print("g={} f={:.1f} f={:.1f} dc={:.1f} dc={:.1f}".
-                format(24, 1000000.0/p1._p, 1000000.0/p1._p_avg,
-                       100.0 * p1._hp/p1._p, 100.0 * p1._hp_avg/p1._p_avg))
+                  format(24, 1000000.0/p1._p, 1000000.0/p1._p_avg,
+                         100.0 * p1._hp/p1._p, 100.0 * p1._hp_avg/p1._p_avg))
         else:
             print("no data yet")
         p1._p = None
