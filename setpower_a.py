@@ -37,9 +37,11 @@ def get_pwm_stop():
     return 98
 
 
-power = int(sys.argv[1])
-# convert to pwm duty cycle
-duty = get_pwm(power)
-print('power={:d}, pwm={:d}'.format(power, duty))
+if __name__ == "__main__":
 
-setpwm2_a.writetopwm(duty)
+    power = int(sys.argv[1])
+    # convert to pwm duty cycle
+    duty = get_pwm(power)
+    print('power={:d}, pwm={:d}'.format(power, duty))
+
+    setpwm2_a.writetopwm(duty)

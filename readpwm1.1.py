@@ -36,7 +36,6 @@ class PWM_read:
         except TypeError:
             return previous_period
 
-
     def _cbf(self, n):
         tick = time.time()
         if GPIO.input(self.gpio):
