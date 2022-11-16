@@ -25,18 +25,22 @@ class PWM_read:
         else:
             return new_period
 
+    def _update_period(self, new_tick, old_tick, previous_period):
+        try:
+            return pigpio.tickDiff(old_tick, new_tick)
+        except TypeError:
+            return previous_period
+
     def _cbf(self, gpio, level, tick):
 
         if level == 1:
-            if self._high_tick is not None:
-                self._p = pigpio.tickDiff(self._high_tick, tick)
+            self._p = self._update_period(tick, self._high_tick, self._p)
             self._p_avg = self._slide_avg(self._p_avg, self._p)
             self._high_tick = tick
             return
 
         if level == 0:
-            if self._high_tick is not None:
-                self._hp = pigpio.tickDiff(self._high_tick, tick)
+            self._hp = self._update_period(tick, self._high_tick, self._hp)
             self._hp_avg = self._slide_avg(self._hp_avg, self._hp)
             return
 

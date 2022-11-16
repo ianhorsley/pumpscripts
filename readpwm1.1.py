@@ -30,20 +30,21 @@ class PWM_read:
         else:
             return new_period
 
+    def _update_period(self, new_tick, old_tick, previous_period):
+        try:
+            return new_tick - old_tick
+        except TypeError:
+            return previous_period
+
+
     def _cbf(self, n):
         tick = time.time()
         if GPIO.input(self.gpio):
-            try:
-                self._p = tick - self._high_tick
-            except TypeError:
-                pass
+            self._p = self._update_period(tick, self._high_tick, self._p)
             self._p_avg = self._slide_avg(self._p_avg, self._p)
             self._high_tick = tick
         else:
-            try:
-                self._hp = tick - self._high_tick
-            except TypeError:
-                pass
+            self._hp = self._update_period(tick, self._high_tick, self._hp)
             self._hp_avg = self._slide_avg(self._hp_avg, self._hp)
 
     def cancel(self):
