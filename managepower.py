@@ -14,7 +14,7 @@ from __future__ import division
 
 import time
 import logging
-import sys 
+import sys
 import os
 import requests
 import json
@@ -38,9 +38,13 @@ from rept_1wire_hmv2 import (
     send_message
 )
 
+
 def create_output_str(number_in):
     """process number to send to emonhub"""
-    return ' ' + ' '.join(map(str, emonhub_coder.encode("h", round(number_in ))))
+    encoded_values = emonhub_coder.encode("h", round(number_in))
+    #convert to string and add spaces
+    return ' ' + ' '.join(map(str, encoded_value))
+
 
 def get_demand_data(setup):
     """get data from emoncms
@@ -151,7 +155,8 @@ def main():
             setpwm2_a.writetopwm(duty)
             logging.debug("written")
         else:
-            power = temp_ratio = int(setup.settings['emonsocket']['temperaturenull'])
+            power = int(setup.settings['emonsocket']['temperaturenull'])
+            temp_ratio = power
 
         # report temps and power level
         output_message += create_output_str(power * 10)
