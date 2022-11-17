@@ -99,7 +99,7 @@ def main():
     # turn the arguments into numbers
     sample_interval = float(args.sample_interval)
 
-    setup, localconfigfile = initialise_setup(args.config_file)
+    setup, _ = initialise_setup(args.config_file)
 
     # setup logging
     logging_setup.initialize_logger_full(
