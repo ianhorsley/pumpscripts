@@ -14,13 +14,20 @@ from __future__ import division
 
 import time
 import logging
+import sys 
+import os
+import requests
+import json
+from datetime import timezone
+import datetime
 from simple_pid import PID
 # pump related imports
 import setpower_a
 import setpwm2_a
+# hm imports
+from heatmisercontroller import logging_setup
 # temperature monitoring related imports
-import sys 
-import os
+import emonhub_coder
 sys.path.append(os.path.abspath("/home/pi/emonreporter/src"))
 from rept_1wire_hmv2 import (
     initialise_setup,
@@ -30,9 +37,56 @@ from rept_1wire_hmv2 import (
     get_args,
     send_message
 )
-import emonhub_coder
-# hm imports
-from heatmisercontroller import logging_setup
+
+def create_output_str(number_in):
+    """process number to send to emonhub"""
+    return ' ' + ' '.join(map(str, emonhub_coder.encode("h", round(number_in ))))
+
+def get_demand_data(setup):
+    """get data from emoncms
+    return dict of data
+    rooms, 94
+    water, 71
+    outside_temp, 79
+
+    urlbase="https://pi4.horsley.me.uk/feed/timevalue.json?id="
+    apikey="bec76bf52d2ee7d1b62fb02005f6a34b"
+    """
+    # Getting the current date and time
+    dt = datetime.datetime.now(timezone.utc)
+    utc_time = dt.replace(tzinfo=timezone.utc)
+    utc_timestamp = utc_time.timestamp()
+
+    # use setup to find urls to collect
+    urlbase = setup.settings['emoncms']['urlbase']
+    feeds = setup.settings['emoncms']['feeds']
+    apikey = setup.settings['emoncms']['apikey']
+
+    results = {}
+
+    for feed in feeds:
+        print(feed)
+        results[feed['variablename']] = [None, 3600]
+        url = urlbase + feed['id'] + '&apikey=' + apikey
+        # for each url, might need to add api key
+        # try:
+        try:
+            response = requests.get(url)
+        except requests.exceptions.ConnectionError:
+            break
+        if response.status_code != 200:
+            break
+        # break out time and value
+        data = json.loads(response.text)
+
+        age = utc_timestamp - data['time']
+        value = data['value']
+
+        # store in variable, with age in seconds
+        results['variablename'] = [value, age]
+
+    # return dict of data
+    return results
 
 
 def main():
@@ -77,7 +131,7 @@ def main():
 
         logging.info("Logging cyle at %d", read_time)
         temps, count, output_message = get_1wire_data(setup,
-                                                      onewirenetwork, 
+                                                      onewirenetwork,
                                                       sensorlist1wire,
                                                       read_time,
                                                       datalogger)
@@ -91,18 +145,19 @@ def main():
 
             # convert to pwm duty cycle
             duty = setpower_a.get_pwm(power)
-            print('tempratio={:.2f} power={:d}, pwm={:d}'.format(temp_ratio, int(power), duty))
+            print('tempratio={:.2f} power={:d}, pwm={:d}'.format(temp_ratio,
+                                                                 int(power),
+                                                                 duty))
             setpwm2_a.writetopwm(duty)
             logging.debug("written")
         else:
             power = temp_ratio = int(setup.settings['emonsocket']['temperaturenull'])
 
         # report temps and power level
-        output_message += ' ' + ' '.join(map(str, emonhub_coder.encode("h", round(power * 10 ))))
-        output_message += ' ' + ' '.join(map(str, emonhub_coder.encode("h", round(temp_ratio * 1000 ))))
+        output_message += create_output_str(power * 10)
+        output_message += create_output_str(temp_ratio * 1000)
         send_message(setup, output_message)
         logging.debug("sent")
-        
 
 
 if __name__ == "__main__":
