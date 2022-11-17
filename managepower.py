@@ -5,7 +5,7 @@ Manage power based on flow and return temperatures
 Report states to emonhub
 
 python3 -m pip install simple-pid
-sudo ./managepower.py --config-file /home/pi/emonreporter/conf/emonreporter.conf
+sudo ./managepower.py --config-file managepower.conf
 '''
 
 # standard library modules used in code
@@ -27,8 +27,8 @@ import setpwm2_a
 # hm imports
 from heatmisercontroller import logging_setup
 # temperature monitoring related imports
-import emonhub_coder
 sys.path.append(os.path.abspath("/home/pi/emonreporter/src"))
+import emonhub_coder
 from rept_1wire_hmv2 import (
     initialise_setup,
     initialise_1wire,
@@ -43,7 +43,7 @@ def create_output_str(number_in):
     """process number to send to emonhub"""
     encoded_values = emonhub_coder.encode("h", round(number_in))
     #convert to string and add spaces
-    return ' ' + ' '.join(map(str, encoded_value))
+    return ' ' + ' '.join(map(str, encoded_values))
 
 
 def get_demand_data(setup):
@@ -68,10 +68,10 @@ def get_demand_data(setup):
 
     results = {}
 
-    for feed in feeds:
-        print(feed)
-        results[feed['variablename']] = [None, 3600]
-        url = urlbase + feed['id'] + '&apikey=' + apikey
+    for feed, f_id in feeds.items():
+        print(feed, f_id)
+        results[feed] = [None, 3600]
+        url = urlbase + f_id + '&apikey=' + apikey
         # for each url, might need to add api key
         # try:
         try:
@@ -83,11 +83,11 @@ def get_demand_data(setup):
         # break out time and value
         data = json.loads(response.text)
 
-        age = utc_timestamp - data['time']
+        age = int(utc_timestamp - data['time'])
         value = data['value']
 
         # store in variable, with age in seconds
-        results['variablename'] = [value, age]
+        results[feed] = [value, age]
 
     # return dict of data
     return results
@@ -129,6 +129,20 @@ def main():
         sleeptime = sample_interval - (time.time() % sample_interval)
         time.sleep(sleeptime)
 
+        # read data from emoncms feeds
+        feed_values = get_demand_data(setup)
+        print(feed_values)
+
+        if feed_values['rooms'][1] > 60:
+            rooms = 5
+        else:
+            rooms = feed_values['rooms'][0]
+            
+        if feed_values['water'][1] > 60:
+            water = 1
+        else:
+            water = feed_values['water'][0]
+
         # read temps
         # get time now and record it
         read_time = int(time.time())  # we only record to integer seconds
@@ -145,8 +159,14 @@ def main():
             flow_temp = max(temps)
             return_temp = min(temps)
             temp_ratio = return_temp / flow_temp
-            power = 100 * pid(temp_ratio)
-
+            #power = 100 * pid(temp_ratio)
+            #power = 5
+            
+            if return_temp < 30:
+                power = max(6, 6 * rooms) * 2
+            else:
+                power = max(6, 6 * rooms)
+            
             # convert to pwm duty cycle
             duty = setpower_a.get_pwm(power)
             print('tempratio={:.2f} power={:d}, pwm={:d}'.format(temp_ratio,
