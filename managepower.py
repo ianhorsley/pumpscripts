@@ -59,8 +59,8 @@ def main():
     logging.info("Entering reading loop")
 
     # create pid controller
-    pid = PID(1, 0.1, 0.05, setpoint=70)
-    pid.output_limits = (0.1, 1)  # limit between 10% and 100%
+    pid = PID(2, 0, 0, setpoint=0.7)  # were 1, 0.05. 0.01
+    pid.output_limits = (0.1, .7)  # limit between 10% and 100%
     pid.sample_time = 1  # update time in seconds
 
     # now loop forever reading the identified sensors and updating pump
@@ -87,19 +87,22 @@ def main():
             flow_temp = max(temps)
             return_temp = min(temps)
             temp_ratio = return_temp / flow_temp
-            print(temp_ratio)
-            power = pid(temp_ratio)
+            power = 100 * pid(temp_ratio)
 
             # convert to pwm duty cycle
             duty = setpower_a.get_pwm(power)
-            print('power={:d}, pwm={:d}'.format(int(power), duty))
+            print('tempratio={:.2f} power={:d}, pwm={:d}'.format(temp_ratio, int(power), duty))
             setpwm2_a.writetopwm(duty)
+            logging.debug("written")
         else:
-            power = int(setup.settings['emonsocket']['temperaturenull'])
+            power = temp_ratio = int(setup.settings['emonsocket']['temperaturenull'])
 
         # report temps and power level
         output_message += ' ' + ' '.join(map(str, emonhub_coder.encode("h", round(power * 10 ))))
+        output_message += ' ' + ' '.join(map(str, emonhub_coder.encode("h", round(temp_ratio * 1000 ))))
         send_message(setup, output_message)
+        logging.debug("sent")
+        
 
 
 if __name__ == "__main__":
