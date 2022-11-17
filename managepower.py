@@ -42,7 +42,7 @@ from rept_1wire_hmv2 import (
 def create_output_str(number_in):
     """process number to send to emonhub"""
     encoded_values = emonhub_coder.encode("h", round(number_in))
-    #convert to string and add spaces
+    # convert to string and add spaces
     return ' ' + ' '.join(map(str, encoded_values))
 
 
@@ -104,7 +104,7 @@ def main():
     # setup logging
     logging_setup.initialize_logger_full(
         setup.settings['logging']['logfolder'],
-        logging.DEBUG)
+        logging.INFO)
 
     # tell the user what is happening
     logging.info("Rolling pump control from temperature and reporting")
@@ -137,11 +137,11 @@ def main():
             rooms = 5
         else:
             rooms = feed_values['rooms'][0]
-            
-        if feed_values['water'][1] > 60:
-            water = 1
-        else:
-            water = feed_values['water'][0]
+
+        # if feed_values['water'][1] > 60:
+        #    water = 1
+        # else:
+        #    water = feed_values['water'][0]
 
         # read temps
         # get time now and record it
@@ -169,7 +169,7 @@ def main():
             
             # convert to pwm duty cycle
             duty = setpower_a.get_pwm(power)
-            print('tempratio={:.2f} power={:d}, pwm={:d}'.format(temp_ratio,
+            logging.info('tempratio={:.2f} power={:d}, pwm={:d}'.format(temp_ratio,
                                                                  int(power),
                                                                  duty))
             setpwm2_a.writetopwm(duty)
