@@ -144,12 +144,6 @@ def main():
 
     # now loop forever reading the identified sensors and updating pump
     while True:
-        # determine how long to wait until next interval
-        # note this will skip some if specified interval is too short
-        #  - it finds the next after now, not next after last
-        sleeptime = sample_interval - (time.time() % sample_interval)
-        time.sleep(sleeptime)
-
         # read data from emoncms feeds
         feed_values = get_demand_data(setup)
         print(feed_values)
@@ -190,6 +184,12 @@ def main():
         output_message += create_output_str(temp_ratio * 1000)
         send_message(setup, output_message)
         logging.debug("sent")
+
+        # determine how long to wait until next interval
+        # note this will skip some if specified interval is too short
+        #  - it finds the next after now, not next after last
+        sleeptime = sample_interval - (time.time() % sample_interval)
+        time.sleep(sleeptime)
 
 
 if __name__ == "__main__":
