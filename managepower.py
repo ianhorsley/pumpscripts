@@ -91,9 +91,6 @@ def get_demand_data(setup_data):
     return results
 
 
-global current_multiplier
-
-
 def compute_pump_curve(setup_data, return_temp, num_rooms):
     """Select pump curve level from temp and rooms active"""
     global current_multiplier
@@ -122,6 +119,7 @@ def main():
 
     setup, _ = initialise_setup(args.config_file)
 
+    global current_multiplier
     current_multiplier = setup.settings['pumpcurveselection']['warmingmultiplier']
 
     # setup logging
