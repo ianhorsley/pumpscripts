@@ -152,24 +152,24 @@ def main():
                                                       datalogger)
 
         if count == 2:
-            # decide power level
+            # decide power level, only if temps are valid
             flow_temp = max(temps)
             return_temp = min(temps)
             temp_ratio = return_temp / flow_temp
             #power = 100 * pid(temp_ratio)
-            #power = 5
 
             power = compute_pump_curve(setup, return_temp, feed_values['rooms'][0])
 
-            # convert to pwm duty cycle
-            duty = setpower_a.get_pwm(power)
-            logurl = 'tempratio={:.2f} power={:d}, pwm={:d}'
-            logging.info(logurl.format(temp_ratio, int(power), duty))
-            setpwm2_a.writetopwm(duty)
-            logging.debug("written")
         else:
-            power = int(setup.settings['emonsocket']['temperaturenull'])
-            temp_ratio = power
+            temp_ratio = int(setup.settings['emonsocket']['temperaturenull'])
+            power = setup.settings['pumpcurveselection']['defaultcurve']
+
+        # convert to pwm duty cycle
+        duty = setpower_a.get_pwm(power)
+        logurl = 'tempratio={:.2f} power={:d}, pwm={:d}'
+        logging.info(logurl.format(temp_ratio, int(power), duty))
+        setpwm2_a.writetopwm(duty)
+        logging.debug("written")
 
         # report temps and power level
         output_message += create_output_str(power * 10)
