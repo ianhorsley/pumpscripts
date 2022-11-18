@@ -20,7 +20,7 @@ import requests
 import json
 from datetime import timezone
 import datetime
-from simple_pid import PID
+#from simple_pid import PID
 from types import SimpleNamespace
 # pump related imports
 import setpower_a
@@ -50,12 +50,6 @@ def create_output_str(number_in):
 def get_demand_data(setup_data):
     """get data from emoncms
     return dict of data
-    rooms, 94
-    water, 71
-    outside_temp, 79
-
-    urlbase="https://pi4.horsley.me.uk/feed/timevalue.json?id="
-    apikey="bec76bf52d2ee7d1b62fb02005f6a34b"
     """
     # Getting the current date and time
     dt = datetime.datetime.now(timezone.utc)
@@ -69,25 +63,22 @@ def get_demand_data(setup_data):
 
     for feed, f_id in conf_vars.feeds.items():
         print(feed, f_id)
-        results[feed] = [None, 3600]
+        results[feed] = [conf_vars.feed_defaults[feed], None]
         url = conf_vars.urlbase + f_id + '&apikey=' + conf_vars.apikey
         # for each url, might need to add api key
         # try:
         try:
             response = requests.get(url)
         except requests.exceptions.ConnectionError:
-            results[feed] = [conf_vars.feed_defaults[feed], None]
             break
 
         if response.status_code != 200:
-            results[feed] = [conf_vars.feed_defaults[feed], None]
             break
         # break out time and value
         data = json.loads(response.text)
         age = int(utc_timestamp - data['time'])
 
         if age > conf_vars.maximumage:
-            results[feed] = [conf_vars.feed_defaults[feed], None]
             break
 
         # store in variable, with age in seconds
@@ -168,7 +159,7 @@ def main():
             #power = 100 * pid(temp_ratio)
             #power = 5
 
-            power = compute_pump_curve(setup, return_temp, rooms)
+            power = compute_pump_curve(setup, return_temp, feed_values['rooms'][0])
 
             # convert to pwm duty cycle
             duty = setpower_a.get_pwm(power)
