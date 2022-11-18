@@ -90,15 +90,24 @@ def get_demand_data(setup_data):
     # return dict of data
     return results
 
+global current_multiplier
+
 
 def compute_pump_curve(setup_data, return_temp, num_rooms):
     """Select pump curve level from temp and rooms active"""
     conf_vars = SimpleNamespace(**setup_data.settings['pumpcurveselection'])
 
-    power = num_rooms * conf_vars.percperroom
     # if in warming stage increase power
     if return_temp < conf_vars.warmingthres:
-        power *= conf_vars.warmingmultiplier
+        current_multiplier *= conf_vars.multiplierscaler
+    else:
+        current_multiplier /= conf_vars.multiplierscaler
+
+    current_multiplier = setpower_a.clamp(current_multiplier,
+                                          1,
+                                          warmingmultiplier)
+
+    power = num_rooms * conf_vars.percperroom * current_multiplier
 
     return setpower_a.clamp(power, conf_vars.mincurve, conf_vars.maxcurve)
 
@@ -110,6 +119,8 @@ def main():
     sample_interval = float(args.sample_interval)
 
     setup, _ = initialise_setup(args.config_file)
+
+    current_multiplier = setup_data.settings['pumpcurveselection']['warmingmultiplier']
 
     # setup logging
     logging_setup.initialize_logger_full(
