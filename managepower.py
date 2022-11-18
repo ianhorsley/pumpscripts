@@ -47,6 +47,24 @@ def create_output_str(number_in):
     return ' ' + ' '.join(map(str, encoded_values))
 
 
+def fetch_url(conf_vars, f_id):
+    """Fetch value from url and check valid."""
+    url = conf_vars.urlbase + f_id + '&apikey=' + conf_vars.apikey
+
+    response = requests.get(url)
+
+    if response.status_code != 200:
+        raise ValueError("no data")
+    # break out time and value
+    data = json.loads(response.text)
+    age = int(utc_timestamp - data['time'])
+
+    if age > conf_vars.maximumage:
+        raise ValueError("data to old")
+
+    return [data['value'], age]
+
+
 def get_demand_data(setup_data):
     """get data from emoncms
     return dict of data
@@ -63,26 +81,11 @@ def get_demand_data(setup_data):
 
     for feed, f_id in conf_vars.feeds.items():
         print(feed, f_id)
-        results[feed] = [conf_vars.feed_defaults[feed], None]
-        url = conf_vars.urlbase + f_id + '&apikey=' + conf_vars.apikey
-        # for each url, might need to add api key
-        # try:
+
         try:
-            response = requests.get(url)
-        except requests.exceptions.ConnectionError:
-            break
-
-        if response.status_code != 200:
-            break
-        # break out time and value
-        data = json.loads(response.text)
-        age = int(utc_timestamp - data['time'])
-
-        if age > conf_vars.maximumage:
-            break
-
-        # store in variable, with age in seconds
-        results[feed] = [data['value'], age]
+            results[feed] = fetch_url(conf_vars, f_id)
+        except (requests.exceptions.ConnectionError, ValueError):
+            results[feed] = [conf_vars.feed_defaults[feed], None]
 
     # return dict of data
     return results
