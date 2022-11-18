@@ -47,7 +47,7 @@ def create_output_str(number_in):
     return ' ' + ' '.join(map(str, encoded_values))
 
 
-def fetch_url(conf_vars, f_id):
+def fetch_url(conf_vars, f_id, utc_timestamp):
     """Fetch value from url and check valid."""
     url = conf_vars.urlbase + f_id + '&apikey=' + conf_vars.apikey
 
@@ -83,12 +83,13 @@ def get_demand_data(setup_data):
         print(feed, f_id)
 
         try:
-            results[feed] = fetch_url(conf_vars, f_id)
+            results[feed] = fetch_url(conf_vars, f_id, utc_timestamp)
         except (requests.exceptions.ConnectionError, ValueError):
             results[feed] = [conf_vars.feed_defaults[feed], None]
 
     # return dict of data
     return results
+
 
 global current_multiplier
 
