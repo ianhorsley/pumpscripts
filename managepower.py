@@ -96,6 +96,7 @@ global current_multiplier
 
 def compute_pump_curve(setup_data, return_temp, num_rooms):
     """Select pump curve level from temp and rooms active"""
+    global current_multiplier
     conf_vars = SimpleNamespace(**setup_data.settings['pumpcurveselection'])
 
     # if in warming stage increase power
