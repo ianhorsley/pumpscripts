@@ -21,6 +21,7 @@ import json
 from datetime import timezone
 import datetime
 from simple_pid import PID
+from types import SimpleNamespace    
 # pump related imports
 import setpower_a
 import setpwm2_a
@@ -46,7 +47,7 @@ def create_output_str(number_in):
     return ' ' + ' '.join(map(str, encoded_values))
 
 
-def get_demand_data(setup):
+def get_demand_data(setup_data):
     """get data from emoncms
     return dict of data
     rooms, 94
@@ -62,36 +63,50 @@ def get_demand_data(setup):
     utc_timestamp = utc_time.timestamp()
 
     # use setup to find urls to collect
-    urlbase = setup.settings['emoncms']['urlbase']
-    feeds = setup.settings['emoncms']['feeds']
-    apikey = setup.settings['emoncms']['apikey']
+    conf_vars = SimpleNamespace(**setup_data.settings['emoncms'])
 
     results = {}
 
-    for feed, f_id in feeds.items():
+    for feed, f_id in conf_vars.feeds.items():
         print(feed, f_id)
         results[feed] = [None, 3600]
-        url = urlbase + f_id + '&apikey=' + apikey
+        url = conf_vars.urlbase + f_id + '&apikey=' + conf_vars.apikey
         # for each url, might need to add api key
         # try:
         try:
             response = requests.get(url)
         except requests.exceptions.ConnectionError:
+            results[feed] = [conf_vars.feed_defaults[feed], None]
             break
+
         if response.status_code != 200:
+            results[feed] = [conf_vars.feed_defaults[feed], None]
             break
         # break out time and value
         data = json.loads(response.text)
-
         age = int(utc_timestamp - data['time'])
-        value = data['value']
+
+        if age > conf_vars.maximumage
+            results[feed] = [conf_vars.feed_defaults[feed], None]
+            break
 
         # store in variable, with age in seconds
-        results[feed] = [value, age]
+        results[feed] = [data['value'], age]
 
     # return dict of data
     return results
 
+
+def compute_pump_curve(setup_data, return_temp, num_rooms):
+    """Select pump curve level from temp and rooms active"""
+    conf_vars = SimpleNamespace(**setup_data.settings['pumpcurveselection'])
+
+    power = num_rooms * conf_vars.percperroom
+    # if in warming stage increase power
+    if return_temp < conf_vars.warmingthres:
+        power *= conf_vars.warmingmultiplier
+        
+    return setpower_a.clamp(power, conf_vars.mincurve, conf_vars.maxcurve):
 
 def main():
     args = get_args('Rolling pump control from temperature and reporting')
@@ -117,9 +132,9 @@ def main():
     logging.info("Entering reading loop")
 
     # create pid controller
-    pid = PID(2, 0, 0, setpoint=0.7)  # were 1, 0.05. 0.01
-    pid.output_limits = (0.1, .7)  # limit between 10% and 100%
-    pid.sample_time = 1  # update time in seconds
+    #pid = PID(2, 0, 0, setpoint=0.7)  # were 1, 0.05. 0.01
+    #pid.output_limits = (0.1, .7)  # limit between 10% and 100%
+    #pid.sample_time = 1  # update time in seconds
 
     # now loop forever reading the identified sensors and updating pump
     while True:
@@ -132,16 +147,6 @@ def main():
         # read data from emoncms feeds
         feed_values = get_demand_data(setup)
         print(feed_values)
-
-        if feed_values['rooms'][1] > 60:
-            rooms = 5
-        else:
-            rooms = feed_values['rooms'][0]
-
-        # if feed_values['water'][1] > 60:
-        #    water = 1
-        # else:
-        #    water = feed_values['water'][0]
 
         # read temps
         # get time now and record it
@@ -161,17 +166,13 @@ def main():
             temp_ratio = return_temp / flow_temp
             #power = 100 * pid(temp_ratio)
             #power = 5
-            
-            if return_temp < 30:
-                power = max(6, 6 * rooms) * 2
-            else:
-                power = max(6, 6 * rooms)
-            
+
+            power = compute_pump_curve(setup, return_temp, rooms)
+
             # convert to pwm duty cycle
             duty = setpower_a.get_pwm(power)
-            logging.info('tempratio={:.2f} power={:d}, pwm={:d}'.format(temp_ratio,
-                                                                 int(power),
-                                                                 duty))
+            logurl = 'tempratio={:.2f} power={:d}, pwm={:d}'
+            logging.info(logurl.format(temp_ratio, int(power), duty))
             setpwm2_a.writetopwm(duty)
             logging.debug("written")
         else:
