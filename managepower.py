@@ -59,7 +59,7 @@ def fetch_url(conf_vars, f_id, utc_timestamp):
     data = json.loads(response.text)
     age = int(utc_timestamp - data['time'])
 
-    if age > conf_vars.maximumage:
+    if age > int(conf_vars.maximumage):
         raise ValueError("data to old")
 
     return [data['value'], age]
