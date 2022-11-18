@@ -120,7 +120,7 @@ def main():
 
     setup, _ = initialise_setup(args.config_file)
 
-    current_multiplier = setup_data.settings['pumpcurveselection']['warmingmultiplier']
+    current_multiplier = setup.settings['pumpcurveselection']['warmingmultiplier']
 
     # setup logging
     logging_setup.initialize_logger_full(
