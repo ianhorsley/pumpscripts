@@ -98,9 +98,9 @@ def compute_pump_curve(setup_data, return_temp, num_rooms):
 
     # if in warming stage increase power
     if return_temp < int(conf_vars.warmingthres):
-        current_multiplier *= int(conf_vars.multiplierscaler)
+        current_multiplier *= float(conf_vars.multiplierscaler)
     else:
-        current_multiplier /= int(conf_vars.multiplierscaler)
+        current_multiplier /= float(conf_vars.multiplierscaler)
 
     current_multiplier = setpower_a.clamp(current_multiplier,
                                           1,
