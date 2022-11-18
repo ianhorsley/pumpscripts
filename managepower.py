@@ -21,7 +21,7 @@ import json
 from datetime import timezone
 import datetime
 from simple_pid import PID
-from types import SimpleNamespace    
+from types import SimpleNamespace
 # pump related imports
 import setpower_a
 import setpwm2_a
@@ -86,7 +86,7 @@ def get_demand_data(setup_data):
         data = json.loads(response.text)
         age = int(utc_timestamp - data['time'])
 
-        if age > conf_vars.maximumage
+        if age > conf_vars.maximumage:
             results[feed] = [conf_vars.feed_defaults[feed], None]
             break
 
@@ -105,8 +105,9 @@ def compute_pump_curve(setup_data, return_temp, num_rooms):
     # if in warming stage increase power
     if return_temp < conf_vars.warmingthres:
         power *= conf_vars.warmingmultiplier
-        
-    return setpower_a.clamp(power, conf_vars.mincurve, conf_vars.maxcurve):
+
+    return setpower_a.clamp(power, conf_vars.mincurve, conf_vars.maxcurve)
+
 
 def main():
     args = get_args('Rolling pump control from temperature and reporting')
