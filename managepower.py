@@ -91,24 +91,55 @@ def get_demand_data(setup_data):
     return results
 
 
-def compute_pump_curve(setup_data, return_temp, num_rooms):
+def compute_pump_curve(setup_data, return_temp, num_rooms, water_demand):
     """Select pump curve level from temp and rooms active"""
-    global current_multiplier
+    global pump_curve_previous
     conf_vars = SimpleNamespace(**setup_data.settings['pumpcurveselection'])
 
     # if in warming stage increase power
     if return_temp < int(conf_vars.warmingthres):
-        current_multiplier *= float(conf_vars.multiplierscaler)
+        multiplier = float(conf_vars.multiplierscaler)
     else:
-        current_multiplier /= float(conf_vars.multiplierscaler)
+        multiplier = 1
+    # calculate curve
+    curve = (num_rooms + water_demand) * conf_vars.percperroom * multiplier
+    #limit curve change
+    curve = setpower_a.clamp(curve, 
+                             pump_curve_previous/conf_vars.maxchangescale,
+                             pump_curve_previous*conf_vars.maxchangescale
+                             )
+    # return and limit
+    return setpower_a.clamp(curve,
+                            conf_vars.mincurve,
+                            conf_vars.maxcurve
+                            )
 
-    current_multiplier = setpower_a.clamp(current_multiplier,
-                                          1,
-                                          conf_vars.warmingmultiplier)
 
-    power = num_rooms * conf_vars.percperroom * current_multiplier
+def proc_temps(temp_list):
+    """process to temps to find flow and return and ratio"""
+    flow = max(temps)
+    ret = min(temps)
+    ratio = return_temp / flow_temp
+    return flow, ret, ret / flow
 
-    return setpower_a.clamp(power, conf_vars.mincurve, conf_vars.maxcurve)
+
+def setup_pins():
+    """function configures burner reading and control pins"""
+    # setup from "pi_pins"
+    pass
+
+
+def get_burner_state():
+    """checks burner pin state"""
+    return 0
+
+
+def update_burner_state(flow, setup):
+    """sets the state of the burner
+    relay is normally closed, so writing a 1 turns off"""
+    # if flow is greater than target turn off
+    # if flow is less than target - 6 turn on
+    # else do nothing
 
 
 def main():
@@ -119,8 +150,8 @@ def main():
 
     setup, _ = initialise_setup(args.config_file)
 
-    global current_multiplier
-    current_multiplier = float(setup.settings['pumpcurveselection']['warmingmultiplier'])
+    global pump_curve_previous
+    pump_curve_previous = float(setup.settings['pumpcurveselection']['defaultcurve'])
 
     # setup logging
     logging_setup.initialize_logger_full(
@@ -144,6 +175,10 @@ def main():
 
     # now loop forever reading the identified sensors and updating pump
     while True:
+        # update logic to read every second and write to burner state
+        # pump updates and output to emoncms every second
+        # burner controller logic
+        
         # read data from emoncms feeds
         feed_values = get_demand_data(setup)
         print(feed_values)
@@ -161,26 +196,25 @@ def main():
 
         if count == 2:
             # decide power level, only if temps are valid
-            flow_temp = max(temps)
-            return_temp = min(temps)
-            temp_ratio = return_temp / flow_temp
+            temp_flow, temp_return, temp_ratio = proc_temps(temps)
+
             #power = 100 * pid(temp_ratio)
 
-            power = compute_pump_curve(setup, return_temp, feed_values['rooms'][0])
+            pump_curve = compute_pump_curve(setup, temp_return, feed_values['rooms'][0], feed_values['water'][0])
 
         else:
             temp_ratio = int(setup.settings['emonsocket']['temperaturenull'])
-            power = setup.settings['pumpcurveselection']['defaultcurve']
+            pump_curve = setup.settings['pumpcurveselection']['defaultcurve']
 
         # convert to pwm duty cycle
-        duty = setpower_a.get_pwm(power)
+        duty = setpower_a.get_pwm(pump_curve)
         logurl = 'tempratio={:.2f} power={:d}, pwm={:d}'
-        logging.info(logurl.format(temp_ratio, int(power), duty))
+        logging.info(logurl.format(temp_ratio, int(pump_curve), duty))
         setpwm2_a.writetopwm(duty)
         logging.debug("written")
 
         # report temps and power level
-        output_message += create_output_str(power * 10)
+        output_message += create_output_str(pump_curve * 10)
         output_message += create_output_str(temp_ratio * 1000)
         send_message(setup, output_message)
         logging.debug("sent")
