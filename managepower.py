@@ -40,6 +40,13 @@ from rept_1wire_hmv2 import (
 )
 
 
+def dict_to_float(in_dict):
+    """cast all the values in a dict to floats"""
+    for key in in_dict:
+        in_dict[key] = float(in_dict[key])
+    return in_dict
+
+
 def create_output_str(number_in):
     """process number to send to emonhub"""
     encoded_values = emonhub_coder.encode("h", round(number_in))
@@ -94,11 +101,11 @@ def get_demand_data(setup_data):
 def compute_pump_curve(setup_data, return_temp, num_rooms, water_demand):
     """Select pump curve level from temp and rooms active"""
     global pump_curve_previous
-    conf_vars = SimpleNamespace(**setup_data.settings['pumpcurveselection'])
+    conf_vars = SimpleNamespace(**dict_to_float(setup_data.settings['pumpcurveselection']))
 
     # if in warming stage increase power
-    if return_temp < int(conf_vars.warmingthres):
-        multiplier = float(conf_vars.multiplierscaler)
+    if return_temp < conf_vars.warmingthres:
+        multiplier = conf_vars.multiplierscaler
     else:
         multiplier = 1
     # calculate curve
@@ -161,7 +168,7 @@ def _release_burner(setup_data):
 def update_burner_state(setup_data, flow, water_state):
     """sets the state of the burner
     relay is normally closed, so writing a 1 turns off"""
-    burner = setup_data.settings['burner_control']
+    burner = dict_to_float(setup_data.settings['burner_control'])
 
     if burner['heat_flow_max'] <= burner['heat_flow_min'] or \
       burner['water_flow_max'] <= burner['water_flow_min']:
