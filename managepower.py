@@ -12,6 +12,7 @@ sudo ./managepower.py --config-file managepower.conf
 from __future__ import absolute_import
 from __future__ import division
 
+import wiringpi
 import time
 import logging
 import sys
@@ -20,7 +21,6 @@ import requests
 import json
 from datetime import timezone
 import datetime
-#from simple_pid import PID
 from types import SimpleNamespace
 # pump related imports
 import setpower_a
@@ -103,8 +103,8 @@ def compute_pump_curve(setup_data, return_temp, num_rooms, water_demand):
         multiplier = 1
     # calculate curve
     curve = num_rooms * conf_vars.percperroom * multiplier + \
-            water_demand + conf_vars.percforwater
-    #limit curve change
+           water_demand + conf_vars.percforwater
+    # limit curve change
     curve = setpower_a.clamp(curve,
                              pump_curve_previous/conf_vars.maxchangescale,
                              pump_curve_previous*conf_vars.maxchangescale
@@ -126,29 +126,30 @@ def proc_temps(temp_list):
 def setup_pins(setup_data):
     """function configures burner reading and control pins"""
     # setup from "pi_pins"
-    wiringpi.pinMode(setup_data.settings['pi_pins']['burner_firing'], wiringpi.INPUT)
-    wiringpi.pinMode(setup_data.settings['pi_pins']['burner_off'], wiringpi.OUTPUT) 
+    pi_pins = setup_data.settings['pi_pins']
+    wiringpi.pinMode(pi_pins['burner_firing'], wiringpi.INPUT)
+    wiringpi.pinMode(pi_pins['burner_off'], wiringpi.OUTPUT)
     return
 
 
 def get_burner_state(setup_data):
     """checks burner on/off state"""
     burner_state_pin = setup_data.settings['pi_pins']['burner_off']
-    return wiringpi.digitalRead(burner_state_pin) 
+    return wiringpi.digitalRead(burner_state_pin)
 
 
-def _toggle_burner(setup_data, flow, min, max):
+def _toggle_burner(setup_data, flow_temp, min_temp, max_temp):
     """Check flow and set boiler accordingly"""
     burner_pin = setup_data.settings['pi_pins']['burner_off']
     # if flow is greater than mac turn off
-    if flow > max:
+    if flow_temp > max_temp:
         wiringpi.digitalWrite(burner_pin, 1)
         return
     # if flow is less than min
-    if flow < min:
+    if flow_temp < min_temp:
         wiringpi.digitalWrite(burner_pin, 0)
         return
-    #otherwise leave state as is
+    # otherwise leave state as is
 
 
 def _release_burner(setup_data):
@@ -163,10 +164,10 @@ def update_burner_state(setup_data, flow, water_state):
     burner = setup_data.settings['burner_control']
 
     if burner['heat_flow_max'] <= burner['heat_flow_min'] or \
-        burner['water_flow_max'] <= burner['water_flow_min']:
+      burner['water_flow_max'] <= burner['water_flow_min']:
         _release_burner(setup_data)
         raise ValueError("burner temp ranges are not valid")
-    #if water demand is on set to on and leave to boiler stat to control
+    # if water demand is on set to on and leave to boiler stat to control
     if water_state > 0:
         if burner['control_water'] > 0:
             _toggle_burner(setup_data, flow, burner['water_flow_min'], burner['water_flow_max'])
@@ -185,7 +186,8 @@ def main():
     setup, _ = initialise_setup(args.config_file)
 
     global pump_curve_previous
-    pump_curve_previous = float(setup.settings['pumpcurveselection']['defaultcurve'])
+    default_curve = setup.settings['pumpcurveselection']['defaultcurve']
+    pump_curve_previous = float(default_curve)
 
     # setup logging
     logging_setup.initialize_logger_full(
@@ -201,11 +203,6 @@ def main():
     datalogger = LocalDatalogger(setup.settings['logging']['logfolder'])
 
     logging.info("Entering reading loop")
-
-    # create pid controller
-    #pid = PID(2, 0, 0, setpoint=0.7)  # were 1, 0.05. 0.01
-    #pid.output_limits = (0.1, .7)  # limit between 10% and 100%
-    #pid.sample_time = 1  # update time in seconds
 
     # now loop forever reading the identified sensors and updating pump
     while True:
@@ -235,14 +232,11 @@ def main():
             # set burner state
             update_burner_state(setup, temp_flow, feed_values['water'][0])
 
-            #power = 100 * pid(temp_ratio)
             pump_curve = compute_pump_curve(setup, temp_return, feed_values['rooms'][0], feed_values['water'][0])
 
         else:
             temp_ratio = int(setup.settings['emonsocket']['temperaturenull'])
             pump_curve = setup.settings['pumpcurveselection']['defaultcurve']
-
-
 
         # convert to pwm duty cycle
         duty = setpower_a.get_pwm(pump_curve)
