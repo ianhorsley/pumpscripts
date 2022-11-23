@@ -104,7 +104,7 @@ def compute_pump_curve(setup_data, return_temp, num_rooms, water_demand):
     # calculate curve
     curve = (num_rooms + water_demand) * conf_vars.percperroom * multiplier
     #limit curve change
-    curve = setpower_a.clamp(curve, 
+    curve = setpower_a.clamp(curve,
                              pump_curve_previous/conf_vars.maxchangescale,
                              pump_curve_previous*conf_vars.maxchangescale
                              )
@@ -117,9 +117,8 @@ def compute_pump_curve(setup_data, return_temp, num_rooms, water_demand):
 
 def proc_temps(temp_list):
     """process to temps to find flow and return and ratio"""
-    flow = max(temps)
-    ret = min(temps)
-    ratio = return_temp / flow_temp
+    flow = max(temp_list)
+    ret = min(temp_list)
     return flow, ret, ret / flow
 
 
@@ -134,11 +133,24 @@ def get_burner_state():
     return 0
 
 
-def update_burner_state(flow, setup):
+def update_burner_state(setup_data, flow, water_state):
     """sets the state of the burner
     relay is normally closed, so writing a 1 turns off"""
+    #if water demand is on set to on and leave to boiler stat to control
+    if water_state > 0:
+        # set relay to 0
+        return
+    if setup.settings['burner_control']['target_flow_max'] <= setup.settings['burner_control']['target_flow_min']:
+        raise ValueError("burner temp range is not valid")
     # if flow is greater than target turn off
+    if flow > setup.settings['burner_control']['target_flow_max']:
+        # set relay to 1
+        pass
     # if flow is less than target - 6 turn on
+    if flow < setup.settings['burner_control']['target_flow_min']:
+        # set relay to 0
+        pass
+    
     # else do nothing
 
 
@@ -178,7 +190,7 @@ def main():
         # update logic to read every second and write to burner state
         # pump updates and output to emoncms every second
         # burner controller logic
-        
+
         # read data from emoncms feeds
         feed_values = get_demand_data(setup)
         print(feed_values)
@@ -198,13 +210,17 @@ def main():
             # decide power level, only if temps are valid
             temp_flow, temp_return, temp_ratio = proc_temps(temps)
 
-            #power = 100 * pid(temp_ratio)
+            # set burner state
+            update_burner_state(setup, flow, feed_values['water'][0])
 
+            #power = 100 * pid(temp_ratio)
             pump_curve = compute_pump_curve(setup, temp_return, feed_values['rooms'][0], feed_values['water'][0])
 
         else:
             temp_ratio = int(setup.settings['emonsocket']['temperaturenull'])
             pump_curve = setup.settings['pumpcurveselection']['defaultcurve']
+
+
 
         # convert to pwm duty cycle
         duty = setpower_a.get_pwm(pump_curve)
