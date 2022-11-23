@@ -233,7 +233,7 @@ def main():
             temp_flow, temp_return, temp_ratio = proc_temps(temps)
 
             # set burner state
-            update_burner_state(setup, flow, feed_values['water'][0])
+            update_burner_state(setup, temp_flow, feed_values['water'][0])
 
             #power = 100 * pid(temp_ratio)
             pump_curve = compute_pump_curve(setup, temp_return, feed_values['rooms'][0], feed_values['water'][0])
