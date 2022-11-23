@@ -102,7 +102,8 @@ def compute_pump_curve(setup_data, return_temp, num_rooms, water_demand):
     else:
         multiplier = 1
     # calculate curve
-    curve = (num_rooms + water_demand) * conf_vars.percperroom * multiplier
+    curve = num_rooms * conf_vars.percperroom * multiplier + \
+            water_demand + conf_vars.percforwater
     #limit curve change
     curve = setpower_a.clamp(curve,
                              pump_curve_previous/conf_vars.maxchangescale,
@@ -122,36 +123,57 @@ def proc_temps(temp_list):
     return flow, ret, ret / flow
 
 
-def setup_pins():
+def setup_pins(setup_data):
     """function configures burner reading and control pins"""
     # setup from "pi_pins"
-    pass
+    wiringpi.pinMode(setup_data.settings['pi_pins']['burner_firing'], wiringpi.INPUT)
+    wiringpi.pinMode(setup_data.settings['pi_pins']['burner_off'], wiringpi.OUTPUT) 
+    return
 
 
-def get_burner_state():
-    """checks burner pin state"""
-    return 0
+def get_burner_state(setup_data):
+    """checks burner on/off state"""
+    burner_state_pin = setup_data.settings['pi_pins']['burner_off']
+    return wiringpi.digitalRead(burner_state_pin) 
+
+
+def _toggle_burner(setup_data, flow, min, max):
+    """Check flow and set boiler accordingly"""
+    burner_pin = setup_data.settings['pi_pins']['burner_off']
+    # if flow is greater than mac turn off
+    if flow > max:
+        wiringpi.digitalWrite(burner_pin, 1)
+        return
+    # if flow is less than min
+    if flow < min:
+        wiringpi.digitalWrite(burner_pin, 0)
+        return
+    #otherwise leave state as is
+
+
+def _release_burner(setup_data):
+    """Set burner to on which leaves boiler state in control"""
+    burner_pin = setup_data.settings['pi_pins']['burner_off']
+    wiringpi.digitalWrite(burner_pin, 0)
 
 
 def update_burner_state(setup_data, flow, water_state):
     """sets the state of the burner
     relay is normally closed, so writing a 1 turns off"""
+    burner = setup_data.settings['burner_control']
+
+    if burner['heat_flow_max'] <= burner['heat_flow_min'] or \
+        burner['water_flow_max'] <= burner['water_flow_min']:
+        _release_burner(setup_data)
+        raise ValueError("burner temp ranges are not valid")
     #if water demand is on set to on and leave to boiler stat to control
     if water_state > 0:
-        # set relay to 0
-        return
-    if setup.settings['burner_control']['target_flow_max'] <= setup.settings['burner_control']['target_flow_min']:
-        raise ValueError("burner temp range is not valid")
-    # if flow is greater than target turn off
-    if flow > setup.settings['burner_control']['target_flow_max']:
-        # set relay to 1
-        pass
-    # if flow is less than target - 6 turn on
-    if flow < setup.settings['burner_control']['target_flow_min']:
-        # set relay to 0
-        pass
-    
-    # else do nothing
+        if burner['control_water'] > 0:
+            _toggle_burner(setup_data, flow, burner['water_flow_min'], burner['water_flow_max'])
+        else:
+            _release_burner(setup_data)
+    else:
+        _toggle_burner(setup_data, flow, burner['heat_flow_min'], burner['heat_flow_max'])
 
 
 def main():
