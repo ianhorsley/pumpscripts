@@ -103,7 +103,7 @@ def compute_pump_curve(setup_data, return_temp, num_rooms, water_demand):
         multiplier = 1
     # calculate curve
     curve = num_rooms * conf_vars.percperroom * multiplier + \
-           water_demand + conf_vars.percforwater
+        water_demand + conf_vars.percforwater
     # limit curve change
     curve = setpower_a.clamp(curve,
                              pump_curve_previous/conf_vars.maxchangescale,
