@@ -98,25 +98,25 @@ def get_demand_data(setup_data):
     return results
 
 
-def compute_pump_curve(setup_data, return_temp, num_rooms, water_demand):
+def compute_pump_curve(setup_data, return_temp, num_rooms, water_demand, pump_curve_previous):
     """Select pump curve level from temp and rooms active"""
-    global pump_curve_previous
     conf_vars = SimpleNamespace(**dict_to_float(setup_data.settings['pumpcurveselection']))
-
+    print(return_temp, num_rooms, water_demand, pump_curve_previous)
     # if in warming stage increase power
     if return_temp < conf_vars.warmingthres:
         multiplier = conf_vars.multiplierscaler
     else:
         multiplier = 1
     # calculate curve
-    curve = num_rooms * conf_vars.percperroom * multiplier + \
-        water_demand + conf_vars.percforwater
+    curve = num_rooms * conf_vars.percperroom * multiplier + water_demand + conf_vars.percforwater
+    print(multiplier, curve, pump_curve_previous, pump_curve_previous/conf_vars.maxchangescale, pump_curve_previous*conf_vars.maxchangescale)
     # limit curve change
     curve = setpower_a.clamp(curve,
                              pump_curve_previous/conf_vars.maxchangescale,
                              pump_curve_previous*conf_vars.maxchangescale
                              )
-    # return and limit
+    print(curve, conf_vars.mincurve, conf_vars.maxcurve)
+    # limit and store in previous
     return setpower_a.clamp(curve,
                             conf_vars.mincurve,
                             conf_vars.maxcurve
@@ -192,9 +192,8 @@ def main():
 
     setup, _ = initialise_setup(args.config_file)
 
-    global pump_curve_previous
     default_curve = setup.settings['pumpcurveselection']['defaultcurve']
-    pump_curve_previous = float(default_curve)
+    pump_curve = float(default_curve)
 
     # setup logging
     logging_setup.initialize_logger_full(
@@ -239,7 +238,7 @@ def main():
             # set burner state
             update_burner_state(setup, temp_flow, feed_values['water'][0])
 
-            pump_curve = compute_pump_curve(setup, temp_return, feed_values['rooms'][0], feed_values['water'][0])
+            pump_curve = compute_pump_curve(setup, temp_return, feed_values['rooms'][0], feed_values['water'][0], pump_curve)
 
         else:
             temp_ratio = int(setup.settings['emonsocket']['temperaturenull'])
