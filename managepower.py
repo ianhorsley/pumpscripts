@@ -165,15 +165,20 @@ def _release_burner(setup_data):
     wiringpi.digitalWrite(burner_pin, 0)
 
 
+def check_burner_limits(setup_data):
+    """Check limits are valid"""
+    burner = dict_to_float(setup_data.settings['burner_control'])
+
+    if burner['heat_flow_max'] <= burner['heat_flow_min']:
+        raise ValueError("burner temp ranges are not valid")
+    if burner['water_flow_max'] <= burner['water_flow_min']:
+        raise ValueError("burner temp ranges are not valid")
+
 def update_burner_state(setup_data, flow, water_state):
     """sets the state of the burner
     relay is normally closed, so writing a 1 turns off"""
     burner = dict_to_float(setup_data.settings['burner_control'])
 
-    if (burner['heat_flow_max'] <= burner['heat_flow_min'] or
-            burner['water_flow_max'] <= burner['water_flow_min']):
-        _release_burner(setup_data)
-        raise ValueError("burner temp ranges are not valid")
     # if water demand is on set to on and set leave to boiler state
     if water_state > 0 and burner['control_water'] == 0:
         _release_burner(setup_data)
@@ -203,6 +208,8 @@ def main():
     default_curve = float(pump_curve_setting['defaultcurve'])
     # initialise pump curve
     pump_curve = default_curve
+    # check burner limits are valid
+    check_burner_limits(setup)
 
     # setup logging
     logging_setup.initialize_logger_full(
