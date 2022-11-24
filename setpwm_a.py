@@ -18,6 +18,7 @@ class PwmPort:
         self.pwmrange = pwmrange
         # dutycycle range from 0 - 100
         self.pwmduty = 0  # start assuming in the off state
+        self.pwmvalue = 0
 
         wiringpi.wiringPiSetupPhys()  # OR, using P1 header pin numbers
         # PWM pin connected to output
@@ -36,12 +37,13 @@ class PwmPort:
         # range of 2500 would give us half second.
         wiringpi.pwmSetRange(pwmrange)  # set pwm range counter
 
-    def writetopwm(self, pwm_level):
+    def writetopwm(self, pwmduty):
         """write level to pwm pin and leave set"""
         try:
-            self.pwmduty = int(round(self.pwmrange*pwm_level/100))
+            self.pwmduty = pwmduty
+            self.pwmvalue = int(round(self.pwmrange*pwmduty/100))
             # provide duty cycle in the range 0-100
-            wiringpi.pwmWrite(self.pwmpin, self.pwmduty)
+            wiringpi.pwmWrite(self.pwmpin, self.pwmvalue)
         except IndexError:
             raise SystemExit(f"Usage: {sys.argv[0]} dutycycle")
         except ValueError:
@@ -62,4 +64,4 @@ class PwmPort:
 if __name__ == "__main__":
 
     pwmport = PwmPort()
-    pwmport.writetopwm(sys.argv[1])
+    pwmport.writetopwm(float(sys.argv[1]))

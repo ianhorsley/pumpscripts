@@ -14,7 +14,7 @@ def clamp(n, minn, maxn):
 
 class Pump(PwmPort):
     def __init__(self):
-        super().__init__(self)
+        super().__init__()
         self.pwm_max = 5  # returns pwm for max power, <10
         self.pwm_min = 88  # returns pwm for min power, 84< <92?
         self.pwm_stop = 98  # returns pwm for stop of the motor > 92
@@ -53,6 +53,6 @@ class Pump(PwmPort):
 if __name__ == "__main__":
 
     pwmpump = Pump()
-    pwmpump.set_power(sys.argv[1])
+    pwmpump.set_power(float(sys.argv[1]))
 
-    print('power={:d}, pwm={:d}'.format(pwmpump.power, pwmpump.pwm_duty))
+    print('power={:.1f}, pwm={:.1f}'.format(pwmpump.power, pwmpump.pwmduty))

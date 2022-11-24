@@ -103,13 +103,13 @@ def compute_pump_curve(data, return_temp, num_rooms, water_on, prev_curve):
 
     # if in warming stage increase power
     if return_temp < conf_vars.warmingthres:
-        multiplier = conf_vars.multiplierscaler
+        multiplier = conf_vars.warmingmultiplier
     else:
         multiplier = 1
     # calculate curve
     curve = (num_rooms * conf_vars.percperroom * multiplier +
-             water_on + conf_vars.percforwater)
-
+             water_on * conf_vars.percforwater)
+    #print(num_rooms, conf_vars.percperroom, multiplier, water_on, conf_vars.percforwater)
     # limit curve change
     curve = setpower_a.clamp(curve,
                              prev_curve/conf_vars.maxchangescale,
@@ -259,7 +259,7 @@ def main():
 
         pump.set_power(pump_curve)
         logurl = 'tempratio={:.2f} power={:.1f}, pwm={:d}'
-        logging.info(logurl.format(temp_ratio, pump_curve, pump.pwm_duty))
+        logging.info(logurl.format(temp_ratio, pump_curve, pump.pwmduty))
 
         # report temps and power level
         output_message += create_output_str(pump_curve * 10)
