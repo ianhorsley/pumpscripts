@@ -19,7 +19,7 @@ class PWM_read2:
 
         self._cb = pi.callback(gpio, pigpio.EITHER_EDGE, self._cbf)
 
-    _slide_avg = readpwm1._slide_avg
+    _slide_avg = PWM_read._slide_avg
 
     def _update_period(self, new_tick, old_tick, previous_period):
         try:
