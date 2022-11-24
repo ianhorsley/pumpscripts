@@ -35,7 +35,7 @@ class Pump(PwmPort):
 
     def set_power(self, power):
         """Compute and set duty cycle based on power level"""
-        pwm_duty = self.compute_pwm(self, power)
+        pwm_duty = self.compute_pwm(power)
         self.writetopwm(pwm_duty)
         self.power = power
 

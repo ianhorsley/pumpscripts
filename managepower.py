@@ -107,7 +107,7 @@ def compute_pump_curve(data, return_temp, num_rooms, water_on, prev_curve):
     else:
         multiplier = 1
     # calculate curve
-    curve = (num_rooms * conf_vars.percperroom * multiplier + 
+    curve = (num_rooms * conf_vars.percperroom * multiplier +
              water_on + conf_vars.percforwater)
 
     # limit curve change
@@ -171,7 +171,7 @@ def update_burner_state(setup_data, flow, water_state):
     burner = dict_to_float(setup_data.settings['burner_control'])
 
     if burner['heat_flow_max'] <= burner['heat_flow_min'] or \
-      burner['water_flow_max'] <= burner['water_flow_min']:
+     burner['water_flow_max'] <= burner['water_flow_min']:
         _release_burner(setup_data)
         raise ValueError("burner temp ranges are not valid")
     # if water demand is on set to on and leave to boiler stat to control
