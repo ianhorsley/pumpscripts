@@ -4,7 +4,7 @@ Control pump power using PWM on Raspberry Pi
 Takes command line input of power 0-100%
 '''
 
-import setpwm2_a
+import setpwm_a
 import sys
 
 
