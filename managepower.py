@@ -98,24 +98,25 @@ def get_demand_data(setup_data):
     return results
 
 
-def compute_pump_curve(setup_data, return_temp, num_rooms, water_demand, pump_curve_previous):
+def compute_pump_curve(data, return_temp, num_rooms, water_on, prev_curve):
     """Select pump curve level from temp and rooms active"""
-    conf_vars = SimpleNamespace(**dict_to_float(setup_data.settings['pumpcurveselection']))
-    print(return_temp, num_rooms, water_demand, pump_curve_previous)
+    conf_vars = SimpleNamespace(**dict_to_float(data.settings['pumpcurveselection']))
+
     # if in warming stage increase power
     if return_temp < conf_vars.warmingthres:
         multiplier = conf_vars.multiplierscaler
     else:
         multiplier = 1
     # calculate curve
-    curve = num_rooms * conf_vars.percperroom * multiplier + water_demand + conf_vars.percforwater
-    print(multiplier, curve, pump_curve_previous, pump_curve_previous/conf_vars.maxchangescale, pump_curve_previous*conf_vars.maxchangescale)
+    curve = num_rooms * conf_vars.percperroom * multiplier + \
+            water_on + conf_vars.percforwater
+
     # limit curve change
     curve = setpower_a.clamp(curve,
-                             pump_curve_previous/conf_vars.maxchangescale,
-                             pump_curve_previous*conf_vars.maxchangescale
+                             prev_curve/conf_vars.maxchangescale,
+                             prev_curve*conf_vars.maxchangescale
                              )
-    print(curve, conf_vars.mincurve, conf_vars.maxcurve)
+
     # limit and store in previous
     return setpower_a.clamp(curve,
                             conf_vars.mincurve,
@@ -171,17 +172,19 @@ def update_burner_state(setup_data, flow, water_state):
     burner = dict_to_float(setup_data.settings['burner_control'])
 
     if burner['heat_flow_max'] <= burner['heat_flow_min'] or \
-      burner['water_flow_max'] <= burner['water_flow_min']:
+    burner['water_flow_max'] <= burner['water_flow_min']:
         _release_burner(setup_data)
         raise ValueError("burner temp ranges are not valid")
     # if water demand is on set to on and leave to boiler stat to control
     if water_state > 0:
         if burner['control_water'] > 0:
-            _toggle_burner(setup_data, flow, burner['water_flow_min'], burner['water_flow_max'])
+            _toggle_burner(setup_data, flow,
+                           burner['water_flow_min'], burner['water_flow_max'])
         else:
             _release_burner(setup_data)
     else:
-        _toggle_burner(setup_data, flow, burner['heat_flow_min'], burner['heat_flow_max'])
+        _toggle_burner(setup_data, flow,
+                       burner['heat_flow_min'], burner['heat_flow_max'])
 
 
 def main():

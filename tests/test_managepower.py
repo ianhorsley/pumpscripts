@@ -1,12 +1,10 @@
 """Unittests for src.get_schedule module"""
 import unittest
-import logging
-import os
 
 from managepower import compute_pump_curve
 
 class Setup_Data:
-    settings = Dict()
+    settings = dict()
 
 class TestPumpCurve(unittest.TestCase):
     def setUp(self):
