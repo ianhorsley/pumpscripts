@@ -134,8 +134,8 @@ def setup_pins(setup_data):
     """function configures burner reading and control pins"""
     # setup from "pi_pins"
     pi_pins = setup_data.settings['pi_pins']
-    wiringpi.pinMode(pi_pins['burner_firing'], wiringpi.INPUT)
-    wiringpi.pinMode(pi_pins['burner_off'], wiringpi.OUTPUT)
+    wiringpi.pinMode(int(pi_pins['burner_firing']), wiringpi.INPUT)
+    wiringpi.pinMode(int(pi_pins['burner_off']), wiringpi.OUTPUT)
     return
 
 
@@ -147,7 +147,7 @@ def get_burner_state(setup_data):
 
 def _toggle_burner(setup_data, flow_temp, min_temp, max_temp):
     """Check flow and set boiler accordingly"""
-    burner_pin = setup_data.settings['pi_pins']['burner_off']
+    burner_pin = int(setup_data.settings['pi_pins']['burner_off'])
     # if flow is greater than mac turn off
     if flow_temp > max_temp:
         wiringpi.digitalWrite(burner_pin, 1)
@@ -161,7 +161,7 @@ def _toggle_burner(setup_data, flow_temp, min_temp, max_temp):
 
 def _release_burner(setup_data):
     """Set burner to on which leaves boiler state in control"""
-    burner_pin = setup_data.settings['pi_pins']['burner_off']
+    burner_pin = int(setup_data.settings['pi_pins']['burner_off'])
     wiringpi.digitalWrite(burner_pin, 0)
 
 
