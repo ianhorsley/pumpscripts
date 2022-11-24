@@ -5,7 +5,6 @@ Manage power based on flow and return temperatures
 Report states to emonhub
 
 python3 -m pip install simple-pid
-sudo ./managepower.py --config-file /home/pi/emonreporter/conf/emonreporter.conf
 '''
 
 # standard library modules used in code
@@ -37,7 +36,7 @@ while True:
     logging.info("Logging cyle at %d", read_time)
 
     temp_ratio = .5
-    
+
     power = pid(temp_ratio)
-    
+
     print(temp_ratio, power)
