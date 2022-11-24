@@ -5,4 +5,5 @@ Set to 31 percent for 60 seconds
 
 import setpwm2_a
 
-setpwm2_a.tempwritetopwm(31, 600)
+pwmport = PwmPort()
+pwmport.tempwritetopwm(31, 600)

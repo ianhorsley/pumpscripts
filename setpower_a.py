@@ -12,36 +12,48 @@ def clamp(n, minn, maxn):
     return max(min(maxn, n), minn)
 
 
-def get_pwm(power):
-    # takes a percentage power and returns pwm setting.
-    # 0-100 from min to max pump speed pwm (84 - 10).
-    boundedpower = clamp(power, 0, 100)
-    if(power != boundedpower):
-        print("power request outside bounds, limited")
-    pwm = -0.74 * boundedpower + 84
-    return int(pwm)
+class Pump(PwmPort):
+    def __init__(self):
+        super().__init__(self)
+        self.pwm_max = 5  # returns pwm for max power, <10
+        self.pwm_min = 88  # returns pwm for min power, 84< <92?
+        self.pwm_stop = 98  # returns pwm for stop of the motor > 92
+        self.power = 100  # assume starts at full power
 
+    def compute_pwm(self, power):
+        # takes a percentage power and returns pwm duty cycle.
+        # 0-100 from min to max pump speed pwm (84 - 10).
+        boundedpower = clamp(power, 0, 100)
+        if(power != boundedpower):
+            print("power request outside bounds, limited")
+        pwm = -0.74 * boundedpower + 84
+        return int(pwm)
 
-def get_pwm_max():
-    # returns pwm for max power, <10
-    return 5
+    def stop(self):
+        self.writetopwm(self.pwm_stop)
+        self.power = None
 
+    def set_power(self, power):
+        """Compute and set duty cycle based on power level"""
+        pwm_duty = compute_pwm(self, power)
+        self.writetopwm(pwm_duty)
+        self.power = power
 
-def get_pwm_min():
-    # returns pwm for min power, 84< <92?
-    return 88
+    def set_min_power(self):
+        """Set pump to min running power"""
+        self.writetopwm(self.pwm_min)
+        self.power = 0
 
+    def set_max_power(self):
+        """Set pump to max power"""
+        self.writetopwm(self.pwm_max)
+        self.power = 100
 
-def get_pwm_stop():
-    # returns pwm for stop of the motor > 92
-    return 98
 
 
 if __name__ == "__main__":
 
-    power = int(sys.argv[1])
-    # convert to pwm duty cycle
-    duty = get_pwm(power)
-    print('power={:d}, pwm={:d}'.format(power, duty))
+    pwmpump = Pump()
+    pwmpump.set_power(sys.argv[1])
 
-    setpwm2_a.writetopwm(duty)
+    print('power={:d}, pwm={:d}'.format(pwmpump.power, pwmpump.pwm_duty))

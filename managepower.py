@@ -24,7 +24,6 @@ import datetime
 from types import SimpleNamespace
 # pump related imports
 import setpower_a
-import setpwm2_a
 # hm imports
 from heatmisercontroller import logging_setup
 # temperature monitoring related imports
@@ -209,6 +208,8 @@ def main():
 
     onewirenetwork, sensorlist1wire = initialise_1wire(setup)
 
+    pump = setpower_a.Pump()  # initialise pump controller
+
     datalogger = LocalDatalogger(setup.settings['logging']['logfolder'])
 
     logging.info("Entering reading loop")
@@ -244,15 +245,12 @@ def main():
             pump_curve = compute_pump_curve(setup, temp_return, feed_values['rooms'][0], feed_values['water'][0], pump_curve)
 
         else:
-            temp_ratio = int(setup.settings['emonsocket']['temperaturenull'])
-            pump_curve = setup.settings['pumpcurveselection']['defaultcurve']
+            temp_ratio = float(setup.settings['emonsocket']['temperaturenull'])
+            pump_curve = float(setup.settings['pumpcurveselection']['defaultcurve'])
 
-        # convert to pwm duty cycle
-        duty = setpower_a.get_pwm(pump_curve)
-        logurl = 'tempratio={:.2f} power={:d}, pwm={:d}'
-        logging.info(logurl.format(temp_ratio, int(pump_curve), duty))
-        setpwm2_a.writetopwm(duty)
-        logging.debug("written")
+        pump.set_power(pump_curve)
+        logurl = 'tempratio={:.2f} power={:.1f}, pwm={:d}'
+        logging.info(logurl.format(temp_ratio, pump_curve, pump.pwm_duty))
 
         # report temps and power level
         output_message += create_output_str(pump_curve * 10)
