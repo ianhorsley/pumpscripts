@@ -4,8 +4,8 @@ Control pump power using PWM on Raspberry Pi
 Takes command line input of power 0-100%
 '''
 
-import setpwm_a
 import sys
+from setpwm_a import PwmPort
 
 
 def clamp(n, minn, maxn):
@@ -35,7 +35,7 @@ class Pump(PwmPort):
 
     def set_power(self, power):
         """Compute and set duty cycle based on power level"""
-        pwm_duty = compute_pwm(self, power)
+        pwm_duty = self.compute_pwm(self, power)
         self.writetopwm(pwm_duty)
         self.power = power
 
@@ -48,7 +48,6 @@ class Pump(PwmPort):
         """Set pump to max power"""
         self.writetopwm(self.pwm_max)
         self.power = 100
-
 
 
 if __name__ == "__main__":

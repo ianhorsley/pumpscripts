@@ -107,8 +107,8 @@ def compute_pump_curve(data, return_temp, num_rooms, water_on, prev_curve):
     else:
         multiplier = 1
     # calculate curve
-    curve = num_rooms * conf_vars.percperroom * multiplier + \
-            water_on + conf_vars.percforwater
+    curve = (num_rooms * conf_vars.percperroom * multiplier + 
+             water_on + conf_vars.percforwater)
 
     # limit curve change
     curve = setpower_a.clamp(curve,
@@ -171,7 +171,7 @@ def update_burner_state(setup_data, flow, water_state):
     burner = dict_to_float(setup_data.settings['burner_control'])
 
     if burner['heat_flow_max'] <= burner['heat_flow_min'] or \
-    burner['water_flow_max'] <= burner['water_flow_min']:
+      burner['water_flow_max'] <= burner['water_flow_min']:
         _release_burner(setup_data)
         raise ValueError("burner temp ranges are not valid")
     # if water demand is on set to on and leave to boiler stat to control
@@ -194,8 +194,12 @@ def main():
 
     setup, _ = initialise_setup(args.config_file)
 
-    default_curve = setup.settings['pumpcurveselection']['defaultcurve']
-    pump_curve = float(default_curve)
+    # get some default values
+    emonhub_null_temp = float(setup.settings['emonsocket']['temperaturenull'])
+    pump_curve_setting = setup.settings['pumpcurveselection']
+    default_curve = float(pump_curve_setting['defaultcurve'])
+    # initialise pump curve
+    pump_curve = default_curve
 
     # setup logging
     logging_setup.initialize_logger_full(
@@ -242,11 +246,16 @@ def main():
             # set burner state
             update_burner_state(setup, temp_flow, feed_values['water'][0])
 
-            pump_curve = compute_pump_curve(setup, temp_return, feed_values['rooms'][0], feed_values['water'][0], pump_curve)
+            pump_curve = compute_pump_curve(setup,
+                                            temp_return,
+                                            feed_values['rooms'][0],
+                                            feed_values['water'][0],
+                                            pump_curve
+                                            )
 
         else:
-            temp_ratio = float(setup.settings['emonsocket']['temperaturenull'])
-            pump_curve = float(setup.settings['pumpcurveselection']['defaultcurve'])
+            temp_ratio = emonhub_null_temp
+            pump_curve = default_curve
 
         pump.set_power(pump_curve)
         logurl = 'tempratio={:.2f} power={:.1f}, pwm={:d}'

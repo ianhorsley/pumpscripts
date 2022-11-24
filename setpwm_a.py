@@ -11,16 +11,17 @@ import sys
 
 class PwmPort:
     """setup and manage pwm output on raspberry pi"""
-    def __init__(self, pwmpin = 12, pwmclockdiv = 192, pwmrange = 1000):
+    def __init__(self, pwmpin=12, pwmclockdiv=192, pwmrange=1000):
+        # pwm only works on P1 header pin 12
         self.pwmpin = pwmpin
         self.pwmclockdiv = pwmclockdiv
         self.pwmrange = pwmrange
         # dutycycle range from 0 - 100
         self.pwmduty = 0  # start assuming in the off state
-        
+
         wiringpi.wiringPiSetupPhys()  # OR, using P1 header pin numbers
-        # pwm only works on P1 header pin 12
-        wiringpi.pinMode(pwmpin, wiringpi.PWM_OUTPUT)  # PWM pin connected to output
+        # PWM pin connected to output
+        wiringpi.pinMode(pwmpin, wiringpi.PWM_OUTPUT)
         wiringpi.pwmSetMode(wiringpi.PWM_MODE_MS)
         # set the clock divisor to reduce the 19.2 Mhz clock
         # to something slower, 5 Khz.
@@ -35,7 +36,7 @@ class PwmPort:
         # range of 2500 would give us half second.
         wiringpi.pwmSetRange(pwmrange)  # set pwm range counter
 
-    def writetopwm(pwm_level):
+    def writetopwm(self, pwm_level):
         """write level to pwm pin and leave set"""
         try:
             self.pwmduty = int(round(self.pwmrange*pwm_level/100))
@@ -48,15 +49,14 @@ class PwmPort:
         except KeyboardInterrupt:  # trap a CTRL+C keyboard interrupt
             print("keyboard interrupt")
 
-
-    def tempwritetopwm(pwm_duty, time):
+    def tempwritetopwm(self, pwm_duty, time):
         """write level to pwm and revert after time(s)"""
         self.writetopwm(pwm_duty)
         sleep(time)
 
         # do we need to write full power before disconnecting?
-        wiringpi.pinMode(pwmpin, wiringpi.INPUT)
-        wiringpi.pullUpDnControl(pwmpin, wiringpi.PUD_DOWN)
+        wiringpi.pinMode(self.pwmpin, wiringpi.INPUT)
+        wiringpi.pullUpDnControl(self.pwmpin, wiringpi.PUD_DOWN)
 
 
 if __name__ == "__main__":
