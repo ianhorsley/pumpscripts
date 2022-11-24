@@ -174,6 +174,7 @@ def check_burner_limits(setup_data):
     if burner['water_flow_max'] <= burner['water_flow_min']:
         raise ValueError("burner temp ranges are not valid")
 
+
 def update_burner_state(setup_data, flow, water_state):
     """sets the state of the burner
     relay is normally closed, so writing a 1 turns off"""

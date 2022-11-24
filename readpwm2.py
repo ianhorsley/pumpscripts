@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
 
-import time
-
 import pigpio  # http://abyz.co.uk/rpi/pigpio/python.html
+import time
+import PWM_read from readpwm1
 
 
-class PWM_read:
+class PWM_read2:
     def __init__(self, pi, gpio):
         self.pi = pi
         self.gpio = gpio
@@ -19,11 +19,7 @@ class PWM_read:
 
         self._cb = pi.callback(gpio, pigpio.EITHER_EDGE, self._cbf)
 
-    def _slide_avg(self, average, new_period):
-        if average is not None and new_period is not None:
-            return average + (new_period - average)/self._avg_n
-        else:
-            return new_period
+    _slide_avg = readpwm1._slide_avg
 
     def _update_period(self, new_tick, old_tick, previous_period):
         try:
@@ -52,7 +48,7 @@ class PWM_read:
 
 pi = pigpio.pi()
 
-p1 = PWM_read(pi, 24)
+p1 = PWM_read2(pi, 24)
 
 try:
     while True:
