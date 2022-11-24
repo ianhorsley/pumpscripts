@@ -1,0 +1,9 @@
+wiringpi
+time
+logging
+sys
+os
+requests
+json
+datetime
+types
