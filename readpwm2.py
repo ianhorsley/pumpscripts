@@ -2,7 +2,7 @@
 
 import pigpio  # http://abyz.co.uk/rpi/pigpio/python.html
 import time
-import PWM_read from readpwm1
+from readpwm1 import PWM_read
 
 
 class PWM_read2:
