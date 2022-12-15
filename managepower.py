@@ -90,7 +90,7 @@ def get_demand_data(setup_data):
         try:
             results[feed] = fetch_url(conf_vars, f_id, utc_timestamp)
         except (requests.exceptions.ConnectionError, ValueError):
-            results[feed] = [conf_vars.feed_defaults[feed], None]
+            results[feed] = [float(conf_vars.feed_defaults[feed]), None]
 
     # return dict of data
     return results
