@@ -86,7 +86,6 @@ def get_demand_data(setup_data):
     results = {}
 
     for feed, f_id in conf_vars.feeds.items():
-        print(feed, f_id)
 
         try:
             results[feed] = fetch_url(conf_vars, f_id, utc_timestamp)
